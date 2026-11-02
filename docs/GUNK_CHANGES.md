@@ -123,6 +123,20 @@ Play tests (`suite.py --rom gunk play`, build 06070ef25), from a Route 29 grass 
 | monkey: random walking, A/B, menus, touch, R / Y / Select | pass: 25 rounds (seed 1234) and 40 rounds (seed 99) |
 | everstone_kadabra: Rare Candy to 36 | pass: evolves; holding an Everstone it doesn't |
 
+More save tests (`suite.py --rom gunk saves`), ported from Gunk's Platinum suite:
+
+| Test | Result |
+|---|---|
+| full_boxes: all 540 slots filled, save, power cycle | pass: boxes identical on the cart and after reloading |
+| backup_recovery_older: the backup half damaged | pass: the newest save loads (status 1, as vanilla), the next save repairs both halves |
+| torn_save_fine: crash every 30 frames through a save, 24 points | pass: +110 to +500f the previous save, +530f on the new one; always loadable |
+| new_game: the real intro, save, power cycle | pass: continued where saved |
+| hall_of_fame: Continue into the Hall of Fame room | pass: record valid in both halves, credits, wake up at home, post-game save valid with the record |
+| map_sweep: Continue onto 30 + 45 maps spread over the game | pass: Goldenrod Tunnel B2F freezes when entered by save edit, identically on vanilla (not a Gunk bug) |
+
+The extra saves (Hall of Fame, Frontier, battle videos) sit at `SAVE_PAGE_MAX` + n, which Gunk hasn't changed, so
+unlike Platinum they don't move; the Hall of Fame test covers them.
+
 Found and fixed: the DexNav patch didn't trigger during the encounter-free steps right after a script (the R
 search itself), so a patch two steps away could be walked over.
 
