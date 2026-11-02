@@ -114,6 +114,18 @@ Kadabra, but not while it holds an Everstone; a Protein takes Attack EVs 100 -> 
 
 Not yet exercised in the emulator: egg hatching speed, the bar speeds in battle, the DS menu banner text.
 
+Play tests (`suite.py --rom gunk play`, build 06070ef25), from a Route 29 grass savestate made from the real intro:
+
+| Test | Result |
+|---|---|
+| wild_battles: 120 grass steps, Exp. All on, every battle fought | pass: 8 battles; field heaps flat after the first three |
+| dexnav_search: R search kept across the Bag, party, Trainer Card; patch battle; walk to New Bark | pass: chain 1 / search level 1 after the battle; search ends on the new map; heaps flat |
+| monkey: random walking, A/B, menus, touch, R / Y / Select | pass: 25 rounds (seed 1234) and 40 rounds (seed 99) |
+| everstone_kadabra: Rare Candy to 36 | pass: evolves; holding an Everstone it doesn't |
+
+Found and fixed: the DexNav patch didn't trigger during the encounter-free steps right after a script (the R
+search itself), so a patch two steps away could be walked over.
+
 ## Plan for the remaining ports
 
 In order; each is its own local commit, built, and run through the emulator suite (`C:\Projects\hg-tools\emu\suite`)
