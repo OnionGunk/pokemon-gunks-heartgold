@@ -229,7 +229,7 @@ int FieldInput_Process(FieldInput *fieldInput, FieldSystem *fieldSystem) {
         playerEvent |= PLAYER_EVENT_USED_STRENGTH;
     }
 
-    if (GetIdxOfFirstPartyMonWithMove(SaveArray_Party_Get(fieldSystem->saveData), MOVE_WATERFALL) != 0xFF) {
+    if (Party_FindMonForFieldMove(SaveArray_Party_Get(fieldSystem->saveData), Save_Bag_Get(fieldSystem->saveData), MOVE_WATERFALL, HEAP_ID_FIELD1) != 0xFF) {
         playerEvent |= PLAYER_EVENT_USED_WATERFALL;
     }
 
@@ -607,7 +607,7 @@ static u16 GetInteractedMetatileScript(FieldSystem *fieldSystem, u8 metatileBeha
         return std_field_rock_climb;
     } else if (PlayerAvatar_GetState(fieldSystem->playerAvatar) != PLAYER_STATE_SURFING) {
         PlayerProfile *profile = Save_PlayerData_GetProfile(fieldSystem->saveData);
-        if (Field_PlayerCanSurfOnTile(fieldSystem->playerAvatar, standingTile, metatileBehavior) && PlayerProfile_TestBadgeFlag(profile, BADGE_FOG) && GetIdxOfFirstPartyMonWithMove(SaveArray_Party_Get(fieldSystem->saveData), MOVE_SURF) != 0xFF) {
+        if (Field_PlayerCanSurfOnTile(fieldSystem->playerAvatar, standingTile, metatileBehavior) && PlayerProfile_TestBadgeFlag(profile, BADGE_FOG) && Party_FindMonForFieldMove(SaveArray_Party_Get(fieldSystem->saveData), Save_Bag_Get(fieldSystem->saveData), MOVE_SURF, HEAP_ID_FIELD1) != 0xFF) {
             return std_field_surf;
         } else if (ov02_0224E35C(fieldSystem) && ov02_0224E4CC(metatileBehavior, ov01_021E7B70(fieldSystem))) {
             return std_safari_place_object;

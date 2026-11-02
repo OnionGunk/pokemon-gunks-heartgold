@@ -5,7 +5,9 @@
 #include "constants/battle.h"
 #include "constants/items.h"
 
+#include "bag.h"
 #include "get_egg.h"
+#include "item.h"
 #include "party.h"
 #include "pokemon_mood.h"
 #include "unk_0206979C.h"
@@ -83,6 +85,46 @@ int GetIdxOfFirstPartyMonWithMove(Party *party, u16 move) {
             || GetMonData(mon, MON_DATA_MOVE2, NULL) == move
             || GetMonData(mon, MON_DATA_MOVE3, NULL) == move
             || GetMonData(mon, MON_DATA_MOVE4, NULL) == move) {
+            return i;
+        }
+    }
+    return 0xFF;
+}
+
+// Gunk: field moves work for a Pokémon that could learn the move from an HM the player owns (badges are still
+// checked as before).
+
+// The HM that teaches `move` if the player owns it, else ITEM_NONE
+u16 Bag_GetOwnedHMForMove(Bag *bag, u16 move, enum HeapID heapID) {
+    for (u16 item = ITEM_HM01; item <= ITEM_HM08; item++) {
+        if (TMHMGetMove(item) == move) {
+            return Bag_HasItem(bag, item, 1, heapID) ? item : ITEM_NONE;
+        }
+    }
+    return ITEM_NONE;
+}
+
+// A Pokémon can use a field move if it knows it, or if it could learn it from an HM the player owns
+BOOL Mon_CanUseFieldMove(Pokemon *mon, Bag *bag, u16 move, enum HeapID heapID) {
+    if (GetMonData(mon, MON_DATA_IS_EGG, NULL)) {
+        return FALSE;
+    }
+    if (MonHasMove(mon, move)) {
+        return TRUE;
+    }
+    u16 hm = Bag_GetOwnedHMForMove(bag, move, heapID);
+    return hm != ITEM_NONE && GetMonTMHMCompat(mon, ItemToTMHMId(hm));
+}
+
+// The party slot to use a field move with: a Pokémon that knows it first, else one that could learn it from an HM
+// the player owns; 0xFF if there is none
+int Party_FindMonForFieldMove(Party *party, Bag *bag, u16 move, enum HeapID heapID) {
+    int slot = GetIdxOfFirstPartyMonWithMove(party, move);
+    if (slot != 0xFF) {
+        return slot;
+    }
+    for (int i = 0; i < Party_GetCount(party); i++) {
+        if (Mon_CanUseFieldMove(Party_GetMonByIndex(party, i), bag, move, heapID)) {
             return i;
         }
     }

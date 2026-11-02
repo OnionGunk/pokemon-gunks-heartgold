@@ -8,6 +8,7 @@
 #include "msgdata/msg/msg_0300.h"
 
 #include "bag.h"
+#include "script_pokemon_util.h"
 #include "battle_regulation.h"
 #include "font.h"
 #include "gf_gfx_loader.h"
@@ -1644,6 +1645,19 @@ static u8 sub_0207B0B0(PartyMenu *partyMenu, u8 *buf) {
                     PartyMenu_ContextMenuAddFieldMove(partyMenu, move, fieldMoveIndex);
                     ++fieldMoveIndex;
                 }
+            }
+            // Gunk: HM moves it could learn from an HM the player owns, while there is room
+            for (i = 0; i < PARTY_MON_CONTEXT_MENU_FIELD_MOVES_COUNT && fieldMoveIndex < MAX_MON_MOVES; ++i) {
+                move = sFieldMoves[i];
+                if (Bag_GetOwnedHMForMove(partyMenu->args->bag, move, HEAP_ID_PARTY_MENU) == ITEM_NONE
+                    || MonHasMove(pokemon, move)
+                    || !Mon_CanUseFieldMove(pokemon, partyMenu->args->bag, move, HEAP_ID_PARTY_MENU)) {
+                    continue;
+                }
+                buf[count] = i + PARTY_MON_CONTEXT_MENU_FIELD_MOVES_BEGIN;
+                ++count;
+                PartyMenu_ContextMenuAddFieldMove(partyMenu, move, fieldMoveIndex);
+                ++fieldMoveIndex;
             }
         } else {
             buf[count] = PARTY_MON_CONTEXT_MENU_SWITCH;

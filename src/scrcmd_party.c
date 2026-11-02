@@ -131,20 +131,11 @@ BOOL ScrCmd_GetPartySlotWithMove(ScriptContext *ctx) {
     FieldSystem *fieldSystem = ctx->fieldSystem;
     u16 *slot = ScriptGetVarPointer(ctx);
     u16 move = ScriptGetVar(ctx);
-    u8 i;
 
-    u8 partyCount = Party_GetCount(SaveArray_Party_Get(fieldSystem->saveData));
-    for (i = 0, *slot = PARTY_SIZE; i < partyCount; i++) {
-        Pokemon *mon = Party_GetMonByIndex(SaveArray_Party_Get(fieldSystem->saveData), i);
-        if (GetMonData(mon, MON_DATA_IS_EGG, NULL)) {
-            continue;
-        }
-
-        if (GetMonData(mon, MON_DATA_MOVE1, NULL) == move || GetMonData(mon, MON_DATA_MOVE2, NULL) == move || GetMonData(mon, MON_DATA_MOVE3, NULL) == move || GetMonData(mon, MON_DATA_MOVE4, NULL) == move) {
-            *slot = i;
-            break;
-        }
-    }
+    // Gunk: the field-move scripts (the only users) also accept a Pokémon that could learn the move from an HM
+    // the player owns
+    int found = Party_FindMonForFieldMove(SaveArray_Party_Get(fieldSystem->saveData), Save_Bag_Get(fieldSystem->saveData), move, HEAP_ID_FIELD1);
+    *slot = found == 0xFF ? PARTY_SIZE : found;
 
     return FALSE;
 }

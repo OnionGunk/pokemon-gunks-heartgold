@@ -1,6 +1,7 @@
 #ifndef POKEHEARTGOLD_SCRIPT_POKEMON_UTIL_H
 #define POKEHEARTGOLD_SCRIPT_POKEMON_UTIL_H
 
+#include "bag.h"
 #include "map_section.h"
 #include "pokemon.h"
 
@@ -8,6 +9,9 @@ BOOL GiveMon(enum HeapID heapID, SaveData *saveData, int species, int level, int
 BOOL GiveEgg(enum HeapID heapID, SaveData *saveData, int species, u8 metLocation, MapsecType mapsecType, int mapLoc);
 void PartyMonSetMoveInSlot(Party *party, int mon_slot, int move_slot, u16 moveId);
 int GetIdxOfFirstPartyMonWithMove(Party *party, u16 move);
+u16 Bag_GetOwnedHMForMove(Bag *bag, u16 move, enum HeapID heapID);
+BOOL Mon_CanUseFieldMove(Pokemon *mon, Bag *bag, u16 move, enum HeapID heapID);
+int Party_FindMonForFieldMove(Party *party, Bag *bag, u16 move, enum HeapID heapID);
 int CountAlivePokemon(Party *party);
 Pokemon *GetFirstAliveMonInParty_CrashIfNone(Party *party);
 u8 GetIdxOfFirstAliveMonInParty_CrashIfNone(Party *party);
