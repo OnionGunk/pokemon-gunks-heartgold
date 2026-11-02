@@ -19,11 +19,19 @@ typedef enum HPBarType {
     HP_BAR_TYPE_PALPARK,
 } HPBarType;
 
+// quality of life: bars move a fixed number of pixels per frame whatever the max HP (vanilla moved 1 HP per
+// frame, so big HP pools drained for seconds); see HP_BAR_PIXELS_PER_FRAME
+#define FAST_HP_BARS
+
 #ifdef FAST_HP_BARS
 #define USE_SUBPIXELS_TEST (TRUE)
 #else
 #define USE_SUBPIXELS_TEST (maxHp < pixelsWide)
 #endif // FAST_HP_BARS
+
+// a full HP bar (48 px) drains in 48 frames and a full EXP bar (96 px, 12 tiles) fills in 48 frames: quick but
+// still visibly moving
+#define HP_BAR_PIXELS_PER_FRAME(tilesWide) ((tilesWide) == 12 ? 2 : 1)
 
 ATTRIBUTE_ALIGN(4)
 static const s8 sHpBarArrowXOffsets[] = {
@@ -1217,7 +1225,7 @@ static int BattleHpBar_CalculatePixelsChangeFrame(s32 maxHp, s32 curHp, s32 delt
         }
     }
     if (USE_SUBPIXELS_TEST) {
-        hpPerPixel = (maxHp << 8) / pixelsWide;
+        hpPerPixel = (maxHp << 8) * HP_BAR_PIXELS_PER_FRAME(tilesWide) / pixelsWide;
         if (deltaHp < 0) {
             *pHpCalc += hpPerPixel;
             ret = *pHpCalc >> 8;

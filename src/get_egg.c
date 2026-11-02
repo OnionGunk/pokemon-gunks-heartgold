@@ -647,12 +647,13 @@ static u8 GetEggCyclesToSubtract(Party *party) {
     for (u8 i = 0; i < partySize; i++) {
         if (!GetMonData(Party_GetMonByIndex(party, i), MON_DATA_SANITY_IS_EGG, NULL)) {
             u8 ability = GetMonData(Party_GetMonByIndex(party, i), MON_DATA_ABILITY, NULL);
+            // quality of life: eggs hatch twice as fast (and four times with these abilities)
             if (ability == ABILITY_MAGMA_ARMOR || ability == ABILITY_FLAME_BODY) {
-                return 2;
+                return 4;
             }
         }
     }
-    return 1;
+    return 2;
 }
 
 static BOOL EggGroupsHaveMatch(const u16 *eggGroups_1, const u16 *eggGroups_2) {
