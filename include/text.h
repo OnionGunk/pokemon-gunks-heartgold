@@ -11,6 +11,9 @@
 
 #define TEXT_SPEED_INSTANT    0    // Transfers to VRAM
 #define TEXT_SPEED_NOTRANSFER 0xFF // Defers VRAM transfer
+// a printer task like the fastest speed that prints everything it can each frame, stopping at button
+// waits and scrolls (the INSTANT text-speed option)
+#define TEXT_SPEED_INSTANT_TASK 0xFE
 
 #define MAX_TEXT_PRINTERS 8
 

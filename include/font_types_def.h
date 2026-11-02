@@ -60,6 +60,7 @@ typedef struct TextPrinter {
     u8 unk2D;
     u16 unk2E;
     u16 *unk30;
+    BOOL instant; // TEXT_SPEED_INSTANT_TASK: prints up to the next button wait each frame
 } TextPrinter;
 
 typedef enum RenderResult {

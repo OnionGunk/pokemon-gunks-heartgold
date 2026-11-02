@@ -127,6 +127,12 @@ static const u16 sOptionChoiceLabelXCoords[MENU_ENTRY_COUNT][3] = {
     { 0,   0,   0   },
 };
 
+// The text speed row has four choices (INSTANT added) but three buttons: SLOW and MID show SLOW / MID / FAST,
+// FAST and INSTANT show MID / FAST / INSTANT. Returns the choice shown in the first button.
+static u16 OptionsApp_TextSpeedFirstShown(u16 value) {
+    return value >= 2 ? 1 : 0;
+}
+
 static const int sActiveButtonXCoords[5][3] = {
     { 112, 160, 208 },
     { 112, 160, 208 },
@@ -766,6 +772,9 @@ static void OptionsApp_LoadMenuEntriesData(OptionsApp_Data *data) {
         }
     }
 
+    data->menuEntries[MENU_ENTRY_TEXT_SPEED].strings[3] = NewString_ReadMsgData(data->msgData, msg_0045_00060); // INSTANT
+    data->menuEntries[MENU_ENTRY_TEXT_SPEED].numStrings = 4;
+
     data->menuEntries[MENU_ENTRY_TEXT_SPEED].value = data->options.textSpeed;
     data->menuEntries[MENU_ENTRY_BATTLE_SCENE].value = data->options.battleScene;
     data->menuEntries[MENU_ENTRY_BATTLE_STYLE].value = data->options.battleStyle;
@@ -802,6 +811,18 @@ static void ov54_021E6418(OptionsApp_Data *data, u16 menuEntryId) {
         Options_SetTextSpeed(data->playerOptions, data->menuEntries[menuEntryId].value);
         OptionsApp_PrintTextFrameString(data, data->frameNumText, FALSE);
         break;
+    }
+
+    if (menuEntryId == MENU_ENTRY_TEXT_SPEED) {
+        u16 first = OptionsApp_TextSpeedFirstShown(data->menuEntries[menuEntryId].value);
+        for (i = 0; i < 3; i++) {
+            String *label = data->menuEntries[menuEntryId].strings[first + i];
+            color = first + i == data->menuEntries[menuEntryId].value ? selectedColor : notSelectedColor;
+            x = sOptionChoiceLabelXCoords[menuEntryId][i] - FontID_String_GetWidth(FONT_SYSTEM, label, 0) / 2;
+            AddTextPrinterParameterizedWithColor(&data->windows.selectedOption, FONT_SYSTEM, label, x, menuEntryId * 24 + 5, TEXT_SPEED_NOTRANSFER, color, NULL);
+        }
+        CopyWindowToVram(&data->windows.selectedOption);
+        return;
     }
 
     x = 0;
@@ -942,6 +963,8 @@ static void OptionsApp_HandleInput(OptionsApp_Data *data) {
                 OptionsApp_UpdateMenuEntryCarousel(data, data->currentMenuEntryId, entry, -1);
             } else if (value == 4) {
                 OptionsApp_UpdateMenuEntryCarousel(data, data->currentMenuEntryId, entry, 1);
+            } else if (data->currentMenuEntryId == MENU_ENTRY_TEXT_SPEED) {
+                entry->value = OptionsApp_TextSpeedFirstShown(entry->value) + value; // value is the button
             } else {
                 entry->value = value;
             }
@@ -1044,7 +1067,11 @@ static void OptionsApp_SetActiveButtonsXPosition(OptionsApp_Data *data) {
     for (int i = 0; i < 5; i++) {
         s16 x, y;
         Sprite_GetPositionXY(data->sprites[i], &x, &y);
-        x = sActiveButtonXCoords[i][data->menuEntries[i].value];
+        u16 button = data->menuEntries[i].value;
+        if (i == MENU_ENTRY_TEXT_SPEED) {
+            button -= OptionsApp_TextSpeedFirstShown(button);
+        }
+        x = sActiveButtonXCoords[i][button];
         Sprite_SetPositionXY(data->sprites[i], x, y);
     }
 }
