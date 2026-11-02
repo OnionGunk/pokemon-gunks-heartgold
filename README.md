@@ -18,9 +18,10 @@ Done:
 - **Pokémon:** Kadabra, Machoke, Graveler and Haunter also evolve by level. The trade evolution items (King's
   Rock, Metal Coat, Dragon Scale and the rest) can be used like evolution stones.
 - **Summary:** Select on the Skills page shows IVs, then EVs.
+- **Moves:** HM moves work without teaching them: a Pokémon that could learn the move from an HM you own can use
+  it (badges are still required). Every Pokémon Center PC has a free Move Tutor that remembers and forgets moves.
 
-Planned: HM moves without teaching them, a Move Tutor in every
-Pokémon Center, Endless Repel, Exp. All, a prompt to use another Repel, 21 PC boxes, and a DexNav.
+Planned: Endless Repel, Exp. All, a prompt to use another Repel, 21 PC boxes, and a DexNav.
 
 Pokémon following you and auto-run (the Running Shoes button) come with HeartGold already.
 
