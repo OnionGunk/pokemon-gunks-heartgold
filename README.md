@@ -27,7 +27,11 @@ Done:
 - **Exp. All** (a key item from the Guide Gent): switched on, Pokémon that didn't battle get half the EXP and the
   EVs.
 
-Planned: 21 PC boxes, a DexNav, and the title logo.
+- **DexNav** (a key item from the Guide Gent): pick one of the area's grass Pokémon, or press R for the last one,
+  and it hides in a rustling patch of grass nearby. Searching the same Pokémon raises its search level and chain,
+  which bring better IVs and more shiny chances. The Pokémon are rolled exactly as wild ones, so they stay legal.
+
+Planned: more PC boxes and the title logo.
 
 Pokémon following you and auto-run (the Running Shoes button) come with HeartGold already.
 
