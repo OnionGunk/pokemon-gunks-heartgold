@@ -62,11 +62,11 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | 23 | Reusable TMs (e8f1b80d) | port | | ✅ |
 | 24 | Field moves without the move: Pokémon that could learn an HM you own can use it, badges still required; party menu lists them (e8f1b80d) | port | HG's field moves: Cut, Fly, Surf, Strength, Whirlpool, Rock Smash, Waterfall, Rock Climb (+ Headbutt tutor move, not an HM: left alone). | ⏳ |
 | 25 | Move Tutor in every Pokémon Center: remembers and forgets moves for free (e8f1b80d) | port | HG already has the Move Relearner (Blackthorn, Heart Scale) and the Move Deleter; this adds a free one to every Center as a new common script. | ⏳ |
-| 26 | Summary screen: A on the Skills page cycles stats / IVs / EVs (2957e59d) | port | | ⏳ |
+| 26 | Summary screen: A on the Skills page cycles stats / IVs / EVs (2957e59d) | adapt | HG's Skills and Battle Moves share a page where A selects moves, so **Select** cycles. Summary is asm: a Select check in `sub_02088B40` and the page draw routed through `src/gunk_summary.c`. Checked on party Pokémon; not yet from the PC (BoxPokemon path). | ✅ |
 | 27 | Exp. All key item from Mom: Pokémon that didn't battle get half the EXP and EVs (2957e59d) | port | HG has only the held Exp. Share. New item appended. | ⏳ |
 | 28 | Vitamins work up to 252 EVs (2957e59d) | port | | ✅ |
-| 29 | Bag: Start sorts the open pocket (2957e59d) | port | | ⏳ |
-| 30 | Two registered items: newest on Y, previous on Select, in the two halves of `Bag.registeredItem` (2957e59d) | adapt | HG already stores two registered items (`registeredItems[2]`, the touch-screen buttons) and Y opens a menu to choose. Add: Select uses item 2 directly; Y keeps HG's behaviour. No save change. | ⏳ |
+| 29 | Bag: Start sorts the open pocket (2957e59d) | port | Uses HG's existing `SortPocket` (by item number). | ✅ |
+| 30 | Two registered items: newest on Y, previous on Select, in the two halves of `Bag.registeredItem` (2957e59d) | adapt | HG already stores two registered items (`registeredItems[2]`, the touch-screen buttons) and Y opens a menu to choose. Add: Select uses item 2 directly; Y keeps HG's behaviour. No save change. (Correction: Y uses item 1 directly in HG; the menu is only on the touch screen.) | ✅ |
 | 31 | Honey trees say the hours until Pokémon gather (2957e59d) | skip: no honey trees in HG | — |
 | 32 | Poké Radar says the chain length (2957e59d) | skip: no Poké Radar in HG | — |
 | 33 | Eggs hatch twice as fast (2957e59d) | port | | 🟡 |
