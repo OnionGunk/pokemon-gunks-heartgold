@@ -955,7 +955,10 @@
 #define ITEM_RED_ORB      534
 #define ITEM_BLUE_ORB     535
 #define ITEM_ENIGMA_STONE 536
-#define ITEMS_COUNT       537
+// Gunk
+#define ITEM_ENDLESS_REPEL 537
+#define ITEM_EXP_ALL       538
+#define ITEMS_COUNT       539
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1

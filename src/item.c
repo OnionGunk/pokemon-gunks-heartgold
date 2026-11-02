@@ -669,6 +669,9 @@ static const u16 sItemNarcIds[ITEMS_COUNT][4] = {
     [ITEM_RED_ORB] = { NARC_item_data_0511_bin, NARC_item_icon_item_icon_751_NCGR, NARC_item_icon_item_icon_752_NCLR, AGB_ITEM_RED_ORB                },
     [ITEM_BLUE_ORB] = { NARC_item_data_0512_bin, NARC_item_icon_item_icon_753_NCGR, NARC_item_icon_item_icon_754_NCLR, AGB_ITEM_BLUE_ORB               },
     [ITEM_ENIGMA_STONE] = { NARC_item_data_0513_bin, NARC_item_icon_item_icon_757_NCGR, NARC_item_icon_item_icon_758_NCLR, AGB_ITEM_NONE                   },
+    // Gunk: key items with the Max Repel's and the Exp. Share's icons
+    [ITEM_ENDLESS_REPEL] = { NARC_item_data_0514_bin, NARC_item_icon_item_icon_109_NCGR, NARC_item_icon_item_icon_111_NCLR, AGB_ITEM_NONE                  },
+    [ITEM_EXP_ALL] = { NARC_item_data_0515_bin, NARC_item_icon_item_icon_256_NCGR, NARC_item_icon_item_icon_257_NCLR, AGB_ITEM_NONE                        },
 };
 
 void MoveItemSlotInList(ItemSlot *slots, int from, int to, int pocket, enum HeapID heapID) {
@@ -1034,7 +1037,7 @@ String *GetNutName(u16 berryId, enum HeapID heapID) {
 }
 
 ItemData *LoadAllItemData(enum HeapID heapID) {
-    return AllocAndReadFromNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, 0, heapID, 0, GetItemIndexMapping(ITEM_MAX, ITEMNARC_PARAM) * sizeof(ItemData));
+    return AllocAndReadFromNarcMemberByIdPair(NARC_itemtool_itemdata_item_data, 0, heapID, 0, (GetItemIndexMapping(ITEM_MAX, ITEMNARC_PARAM) + 1) * sizeof(ItemData)); // Gunk: + 1, or the last item is left out
 }
 
 ItemData *GetItemDataPtrFromArray(ItemData *itemData, u32 itemDataIdx) {

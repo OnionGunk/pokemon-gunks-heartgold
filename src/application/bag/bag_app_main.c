@@ -10,6 +10,7 @@
 #include "constants/vars.h"
 
 #include "bag.h"
+#include "gunk.h"
 #include "bag_types_def.h"
 #include "bag_view.h"
 #include "bg_window.h"
@@ -1956,6 +1957,12 @@ static BOOL BagApp_TryUseItemInPlace(BagAppData *appData, u16 itemId) {
         string = BagApp_TryUseRepel(appData, itemId);
     } else if (itemId == ITEM_GB_SOUNDS) {
         string = BagApp_ToggleGBSounds(appData, itemId);
+        appData->quantity = 0;
+    } else if (itemId == ITEM_ENDLESS_REPEL || itemId == ITEM_EXP_ALL) {
+        // Gunk: key items switched on and off in the bag
+        BOOL on = Gunk_ToggleSetting(appData->bagView->saveData, itemId == ITEM_ENDLESS_REPEL ? GUNK_SETTING_ENDLESS_REPEL : GUNK_SETTING_EXP_ALL);
+        string = NewString_ReadMsgData(appData->msgData, on ? msg_0010_00129 : msg_0010_00130);
+        PlaySE(SEQ_SE_DP_SELECT);
         appData->quantity = 0;
     } else {
         return FALSE;

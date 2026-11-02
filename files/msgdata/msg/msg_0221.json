@@ -4117,6 +4117,14 @@
         "the ground. A very beautiful stone that\n",
         "is covered with bits of rock and earth."
       ]
+    },
+    {
+      "id": "msg_0221_00537",
+      "en_US": ["A reusable Repel. Switched on, it keeps\n", "weak wild Pokémon away until it is\n", "switched off."]
+    },
+    {
+      "id": "msg_0221_00538",
+      "en_US": ["Switched on, Pokémon that didn’t battle\n", "get half the Exp. Points (and the\n", "Effort Values) of a defeated Pokémon."]
     }
   ]
 }

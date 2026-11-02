@@ -15,6 +15,7 @@
 #include "field_roamer.h"
 #include "follow_mon.h"
 #include "gf_rtc.h"
+#include "gunk.h"
 #include "map_events.h"
 #include "math_util.h"
 #include "metatile_behavior.h"
@@ -236,7 +237,8 @@ BOOL FieldSystem_PerformLandOrSurfEncounterCheck(FieldSystem *fieldSystem) {
     EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
     Pokemon *leadMon = Party_GetMonByIndex(party, 0);
     EncounterGenState_Init(fieldSystem, leadMon, encData, &encounterGen);
-    if (!RoamerSave_RepelNotInUse(Save_Roamers_Get(fieldSystem->saveData))) {
+    // Gunk: the Endless Repel, while switched on, works like a Repel that never wears off
+    if (!RoamerSave_RepelNotInUse(Save_Roamers_Get(fieldSystem->saveData)) || Gunk_IsSettingOn(fieldSystem->saveData, GUNK_SETTING_ENDLESS_REPEL)) {
         Pokemon *mon = GetFirstAliveMonInParty_CrashIfNone(party);
         encounterGen.isRepel = TRUE;
         encounterGen.level = GetMonData(mon, MON_DATA_LEVEL, NULL);

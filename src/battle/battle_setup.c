@@ -8,6 +8,7 @@
 #include "msgdata/msg/msg_0445.h"
 
 #include "follow_mon.h"
+#include "gunk.h"
 #include "metatile_behavior.h"
 #include "mom_gift.h"
 #include "msgdata.h"
@@ -28,6 +29,8 @@
 #include "unk_0206D494.h"
 #include "unk_02088288.h"
 #include "unk_02092BE8.h"
+
+BOOL gGunkExpAllOn; // gunk.h
 
 static void BattleSetup_SetParty(BattleSetup *setup, Party *party, int battlerId);
 static void BattleSetup_SetProfile(BattleSetup *setup, PlayerProfile *profile, int battlerId);
@@ -252,6 +255,7 @@ void sub_02051D18(BattleSetup *setup, FieldSystem *fieldSystem, SaveData *saveDa
     setup->palPad = Save_PalPad_Get(saveData);
     setup->mapNumber = mapno;
     setup->saveData = saveData;
+    gGunkExpAllOn = Gunk_IsSettingOn(saveData, GUNK_SETTING_EXP_ALL);
 }
 
 void BattleSetup_InitFromFieldSystem(BattleSetup *setup, FieldSystem *fieldSystem) {

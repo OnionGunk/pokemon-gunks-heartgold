@@ -2148,6 +2148,14 @@
     {
       "id": "msg_0223_00536",
       "en_US": "an {COLOR 255}Enigma Stone{COLOR 0}"
+    },
+    {
+      "id": "msg_0223_00537",
+      "en_US": "an {COLOR 255}Endless Repel{COLOR 0}"
+    },
+    {
+      "id": "msg_0223_00538",
+      "en_US": "an {COLOR 255}Exp. All{COLOR 0}"
     }
   ]
 }

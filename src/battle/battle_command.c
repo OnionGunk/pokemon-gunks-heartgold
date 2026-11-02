@@ -25,6 +25,7 @@
 
 #include "assert.h"
 #include "gf_gfx_loader.h"
+#include "gunk.h"
 #include "item.h"
 #include "naming_screen.h"
 #include "obj_char_transfer.h"
@@ -1272,6 +1273,17 @@ BOOL BtlCmd_CalcExpGain(BattleSystem *battleSystem, BattleContext *ctx) {
 }
 
 static void Task_GetExp(SysTask *task, void *data);
+
+// Gunk: with the Exp. All switched on, party Pokémon that didn't battle get half the defeated Pokémon's EXP (and its
+// EVs), as the Exp. Share does from Generation VI on
+static BOOL Gunk_GetsExpAllShare(Pokemon *mon) {
+    return gGunkExpAllOn && GetMonData(mon, MON_DATA_SPECIES, NULL) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG, NULL);
+}
+
+static u32 Gunk_ExpAllShare(BattleContext *ctx) {
+    u32 exp = GetMonBaseStat(ctx->battleMons[ctx->battlerIdFainted].species, BASE_EXP_YIELD) * ctx->battleMons[ctx->battlerIdFainted].level / 7 / 2;
+    return exp > 0 ? exp : 1;
+}
 
 enum {
     DATA_GET_EXP_PRINTER_ID = 0,
@@ -6011,7 +6023,7 @@ static void Task_GetExp(SysTask *task, void *inData) {
         item = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
         itemEffect = GetItemAttr(item, ITEM_VAR_HOLD_EFFECT, HEAP_ID_BATTLE);
 
-        if (itemEffect == HOLD_EFFECT_EXP_SHARE || (data->ctx->unk_A4[side] & MaskOfFlagNo(slot))) {
+        if (itemEffect == HOLD_EFFECT_EXP_SHARE || (data->ctx->unk_A4[side] & MaskOfFlagNo(slot)) || Gunk_GetsExpAllShare(mon)) {
             break;
         }
     }
@@ -6052,6 +6064,10 @@ static void Task_GetExp(SysTask *task, void *inData) {
 
             if (itemEffect == HOLD_EFFECT_EXP_SHARE) {
                 totalExp += data->ctx->partyGainedExp;
+            }
+
+            if (totalExp == 0 && Gunk_GetsExpAllShare(mon)) {
+                totalExp = Gunk_ExpAllShare(data->ctx);
             }
 
             if (itemEffect == HOLD_EFFECT_EXP_UP) {

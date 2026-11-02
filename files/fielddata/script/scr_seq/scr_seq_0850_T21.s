@@ -191,6 +191,9 @@ _0228:
 	PlayFanfare SEQ_ME_ITEM
 	WaitFanfare
 	NPCMsg msg_0550_T21_00008
+	// Gunk: the Endless Repel and the Exp. All come with the Running Shoes
+	GiveItemNoCheck ITEM_ENDLESS_REPEL, 1
+	GiveItemNoCheck ITEM_EXP_ALL, 1
 	CloseMsg
 	ApplyMovement obj_T21_gsoldman1, _0580
 	WaitMovement

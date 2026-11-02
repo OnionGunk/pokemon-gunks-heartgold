@@ -603,6 +603,14 @@
     {
       "id": "msg_0010_00128",
       "en_US": "STOP"
+    },
+    {
+      "id": "msg_0010_00129",
+      "en_US": ["{STRVAR_1 3, 0, 0} switched on the\n", "{STRVAR_1 8, 1, 0}."]
+    },
+    {
+      "id": "msg_0010_00130",
+      "en_US": ["{STRVAR_1 3, 0, 0} switched off the\n", "{STRVAR_1 8, 1, 0}."]
     }
   ]
 }
