@@ -7,6 +7,7 @@
 #include "easy_chat.h"
 #include "friend_group.h"
 #include "game_stats.h"
+#include "gunk_save.h"
 #include "hall_of_fame.h"
 #include "mystery_gift.h"
 #include "palPark_migration.h"
@@ -300,6 +301,12 @@ const struct SaveChunkHeader gSaveChunkHeaders[] = {
      0,
      (SAVESIZEFN)Save_TrainerHouse_sizeof,
      (SAVEINITFN)Save_TrainerHouse_Init,
+     },
+    {
+     SAVE_GUNK,
+     0,
+     (SAVESIZEFN)GunkSave_sizeof,
+     (SAVEINITFN)GunkSave_Init,
      },
     {
      SAVE_PCSTORAGE,

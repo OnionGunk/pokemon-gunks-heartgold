@@ -107,6 +107,7 @@ Static main
     Object src/gf_3d_vramman.c
     Object asm/unk_02027010.s
     Object src/save_arrays.c
+    Object src/gunk_save.c
     Object src/save.c
     Object src/sav_system_info.c
     Object src/player_data.c
