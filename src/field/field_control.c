@@ -140,7 +140,7 @@ void FieldInput_Update(FieldInput *fieldInput, FieldSystem *fieldSystem, u16 new
                 fieldInput->registeredItem = 1;
                 fieldSystem->lastTouchMenuInput = 0;
             }
-        } else if (fieldSystem->lastTouchMenuInput == 10) {
+        } else if (shouldDrawBagIcon && (newKeys & PAD_BUTTON_SELECT) || fieldSystem->lastTouchMenuInput == 10) { // Gunk: Select uses the second registered item
             if (ov01_021E690C(fieldSystem) == TRUE) {
                 fieldInput->registeredItem = 2;
                 fieldSystem->lastTouchMenuInput = 0;
