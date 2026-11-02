@@ -2298,6 +2298,18 @@
     {
       "id": "msg_0191_00476",
       "en_US": "DOUBLE BATTLE"
+    },
+    {
+      "id": "msg_0191_00477",
+      "en_US": "MOVE TUTOR"
+    },
+    {
+      "id": "msg_0191_00478",
+      "en_US": "REMEMBER"
+    },
+    {
+      "id": "msg_0191_00479",
+      "en_US": "FORGET"
     }
   ]
 }

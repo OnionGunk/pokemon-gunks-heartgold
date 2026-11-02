@@ -794,18 +794,22 @@ _0A82:
 
 _0A8C:
 	MenuItemAdd msg_0191_00064, 255, 2
+	MenuItemAdd msg_0191_00477, 255, 4 // Gunk: Move Tutor
 	MenuItemAdd msg_0191_00066, 255, 3
 	MenuExec
 	Switch VAR_SPECIAL_x8006
+	Case 4, _GunkMoveTutor
 	Case 0, _0B01
 	Case 1, _0C23
 	Case 2, _0DBA
 	GoTo _0DF0
 
 _0AD1:
+	MenuItemAdd msg_0191_00477, 255, 4 // Gunk: Move Tutor
 	MenuItemAdd msg_0191_00066, 255, 2
 	MenuExec
 	Switch VAR_SPECIAL_x8006
+	Case 4, _GunkMoveTutor
 	Case 0, _0B01
 	Case 1, _0C23
 	GoTo _0DF0
@@ -1750,4 +1754,93 @@ scr_seq_0003_064:
 	CloseMsg
 	ReleaseAll
 	End
+// Gunk: the Pokemon Center PC's MOVE TUTOR remembers and forgets moves for free (the Blackthorn Move Relearner
+// without the Heart Scale, and the Move Deleter). Returns to the PC menu.
+_GunkMoveTutor:
+	NPCMsg msg_0040_00117
+	MenuInitStdGmm 1, 1, 0, 1, VAR_SPECIAL_x8006
+	MenuItemAdd msg_0191_00478, 255, 0
+	MenuItemAdd msg_0191_00479, 255, 1
+	MenuItemAdd msg_0191_00024, 255, 2
+	MenuExec
+	Switch VAR_SPECIAL_x8006
+	Case 0, _GunkTutorRemember
+	Case 1, _GunkTutorForget
+	GoTo _0A2E
+
+_GunkTutorRemember:
+	NPCMsg msg_0040_00118
+	CloseMsg
+	Call _0E16
+	PartySelectUI
+	GetPartySelection VAR_SPECIAL_x8005
+	RestoreOverworld
+	Call _0E02
+	Compare VAR_SPECIAL_x8005, 255
+	GoToIfEq _0A2E
+	GetPartyMonSpecies VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfEq _GunkTutorEgg
+	ScrCmd_466 VAR_SPECIAL_RESULT, VAR_SPECIAL_x8005
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfEq _GunkTutorNoMoves
+	NPCMsg msg_0040_00119
+	CloseMsg
+	Call _0E16
+	MoveRelearnerInit VAR_SPECIAL_x8005
+	MoveRelearnerGetResult VAR_SPECIAL_RESULT
+	RestoreOverworld
+	Call _0E02
+	GoTo _0A2E
+
+_GunkTutorForget:
+	NPCMsg msg_0040_00122
+	CloseMsg
+	Call _0E16
+	PartySelectUI
+	GetPartySelection VAR_SPECIAL_x8002
+	RestoreOverworld
+	Call _0E02
+	Compare VAR_SPECIAL_x8002, 255
+	GoToIfEq _0A2E
+	GetPartyMonSpecies VAR_SPECIAL_x8002, VAR_SPECIAL_x8001
+	Compare VAR_SPECIAL_x8001, 0
+	GoToIfEq _GunkTutorEgg
+	CountMonMoves VAR_SPECIAL_RESULT, VAR_SPECIAL_x8002
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _GunkTutorOneMove
+	NPCMsg msg_0040_00124
+	CloseMsg
+	Call _0E16
+	ScrCmd_394 VAR_SPECIAL_x8002
+	ScrCmd_395 VAR_SPECIAL_x8001
+	RestoreOverworld
+	Call _0E02
+	Compare VAR_SPECIAL_x8001, 255
+	GoToIfEq _0A2E
+	BufferPartyMonMoveName 0, VAR_SPECIAL_x8002, VAR_SPECIAL_x8001
+	NPCMsg msg_0040_00125
+	GetMenuChoice VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfNe _0A2E
+	MonForgetMove VAR_SPECIAL_x8002, VAR_SPECIAL_x8001
+	PlayFanfare SEQ_ME_WASURE
+	WaitFanfare
+	NPCMsg msg_0040_00126
+	WaitButton
+	GoTo _0A2E
+
+_GunkTutorEgg:
+	NPCMsg msg_0040_00121
+	GoTo _0A2E
+
+_GunkTutorNoMoves:
+	NPCMsg msg_0040_00120
+	WaitButton
+	GoTo _0A2E
+
+_GunkTutorOneMove:
+	NPCMsg msg_0040_00123
+	GoTo _0A2E
+
 	.balign 4, 0
