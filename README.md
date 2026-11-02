@@ -21,7 +21,13 @@ Done:
 - **Moves:** HM moves work without teaching them: a Pokémon that could learn the move from an HM you own can use
   it (badges are still required). Every Pokémon Center PC has a free Move Tutor that remembers and forgets moves.
 
-Planned: Endless Repel, Exp. All, a prompt to use another Repel, 21 PC boxes, and a DexNav.
+- **Repels:** when a Repel wears off and you have another of the same kind, the game offers to use it. The
+  Endless Repel (a key item from the Guide Gent, with the Running Shoes) keeps weak wild Pokémon away until you
+  switch it off.
+- **Exp. All** (a key item from the Guide Gent): switched on, Pokémon that didn't battle get half the EXP and the
+  EVs.
+
+Planned: 21 PC boxes, a DexNav, and the title logo.
 
 Pokémon following you and auto-run (the Running Shoes button) come with HeartGold already.
 
