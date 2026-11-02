@@ -94,11 +94,48 @@ Platinum appended 26 script commands and 6 common scripts. HeartGold needs these
 | 17 follower commands (GetPokemonFollowerPartySlot … GetPokemonFollowerDirFromPlayer) | skip | |
 | Common scripts: DexNav, DexNavBattle, DexNavMenu, EndlessRepel, MoveTutor, ExpAll | port | appended after HG's last common script |
 
+## Plan for the remaining ports
+
+In order; each is its own local commit, built, and run through the emulator suite (`C:\Projects\hg-tools\emu\suite`)
+before the next.
+
+1. **INSTANT text (#17).** `Options.textSpeed` is a 4-bit field, so value 3 fits without a save change. HG's options
+   app reads each row's choices from msg_0045 in one sequence (`msg_0045_00009 + msgNum++`) and lays out at most 3
+   label columns (`sOptionChoiceLabelXCoords[][3]`): append "INSTANT" at the end of msg_0045 and special-case the
+   text-speed row instead of inserting into the sequence. Text printer: a sentinel speed that `AddTextPrinter` turns
+   into "render until a button wait" per frame (Platinum's `TEXT_SPEED_INSTANT_TASK`), with a new field appended to
+   `TextPrinter` (heap-allocated only in text.c, so appending is safe). New games start on FAST.
+2. **Summary IV/EV view (#26).** Find HG's summary-screen Skills page (`src/application/pokemon_summary` or asm);
+   A cycles stats / IVs / EVs.
+3. **Trade evolutions (#34).** Level evolutions for Kadabra 36, Machoke / Graveler / Haunter 37 in the species
+   evolution data; the trade items get the evolution-stone use attribute in `files/itemtool/itemdata/item_data.csv`,
+   with the matching `EVO_TRADE_ITEM` entries usable via `EVOCTX_ITEM_USE`.
+4. **Bag sorting (#29)** and **Select for the second registered item (#30).** HG's bag app is in
+   `src/application/bag`; field input for Select needs locating (overlay 1, partly asm).
+5. **Field moves without the move (#24)** and **Move Tutor in every Pokémon Center (#25).** The party menu's field-move
+   list (`party_menu*.c`) plus a new common script appended after HG's last one, and an NPC added to each Pokémon
+   Center's event file.
+6. **New key items (#22 Endless Repel, #27 Exp. All, #21 Repel prompt).** Items appended after `ITEM_ENIGMA_STONE`
+   (536) in `items.h` and `item_data.csv` (+ names, descriptions, icons); new script commands appended to
+   `gScriptCmdTable`; Mom in New Bark gives them with the Running Shoes. Exp. All needs the battle EXP code
+   (src/battle) to give half EXP and EVs to party members that didn't battle.
+7. **21 PC boxes (#4).** First decompile-or-map every box-count dependency in overlay 14 (the PC app is assembly):
+   loops to 18, wrap-arounds, and per-box arrays in its working memory. Then `NUM_BOXES` 21, `SAVE_PAGE_MAX` 35 -> 38
+   (the PC block grows from 19 to 22 sectors; the extra saves shift to 38+ and still end inside the 64-sector half),
+   box names 19-21 appended to msg_0024, and a full-boxes test (630 Pokémon saved, power cycled, compared) plus the
+   torn-save test. Highest risk to saves, so it goes after the others are stable.
+8. **DexNav (#7-#10).** Key item with a touch-screen species grid (caught / seen silhouette / unseen "?"), search,
+   chains and levels; legal Method K rolls; levels saved in a new save array appended after `SAVE_PCSTORAGE` (box
+   block, after #7 settles that block's size); gift from Lyra/Ethan after the Route 29 catching tutorial.
+9. **Title logo (#3)** and **c026a1c9 check (#16).**
+
 ## Save budget
 
-HeartGold (US), measured from the source; to be confirmed live in the emulator:
+HeartGold (US), measured on the cart in the emulator (vanilla build):
 
-- Each flash half is 64 sectors (0x40000). The main save is `SAVE_PAGE_MAX` = 35 sectors (normal block + PC block).
+- Each flash half is 64 sectors (0x40000). The main save is `SAVE_PAGE_MAX` = 35 sectors: the normal block is
+  63,016 bytes (16 sectors) and the PC block 74,512 bytes (19 sectors), which fills all 35. The PC block starts at
+  0xF700 (0x100-aligned after the normal block), not on a sector boundary.
 - The extra saves sit at sectors `SAVE_PAGE_MAX + 0, 3, 4, 6, 8, 10` (Hall of Fame and Battle Frontier records/videos),
   ending around sector 47, so ~17 sectors per half are unused.
 - 21 boxes need ~3 more sectors: `SAVE_PAGE_MAX` 35 → 38, extras move up 3 and still fit. `SaveData.dynamic_region`
