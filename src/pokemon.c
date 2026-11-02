@@ -2800,7 +2800,8 @@ u16 GetMonEvolution(Party *party, Pokemon *mon, u8 context, u16 usedItem, int *m
     pid_hi = (u16)((pid & 0xFFFF0000) >> 16);
     holdEffect = GetItemAttr(heldItem, ITEMATTR_HOLD_EFFECT, HEAP_ID_DEFAULT);
     // Kadabra bypasses Everstone because he's just that broken.
-    if (species != SPECIES_KADABRA && holdEffect == HOLD_EFFECT_NO_EVOLVE && context != EVOCTX_ITEM_USE) {
+    // Gunk: only when traded, now that Kadabra also evolves by level
+    if ((species != SPECIES_KADABRA || context == EVOCTX_LEVELUP) && holdEffect == HOLD_EFFECT_NO_EVOLVE && context != EVOCTX_ITEM_USE) {
         return SPECIES_NONE;
     }
     // Spiky-ear Pichu cannot evolve
