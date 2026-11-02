@@ -1081,6 +1081,14 @@ static BagAppState BagAppMainTask_HandleInput_Normal(BagAppData *appData) {
         } else {
             return BagApp_HandleCursorAction(appData, BagApp_GetPocketNeighbor(appData, appData->bagView->curPocket, 1), &selectedItemFlag, 1, 2, MENU_INPUT_STATE_BUTTONS);
         }
+    } else if (gSystem.newKeys & PAD_BUTTON_START) {
+        // Gunk: Start sorts the open pocket by item number
+        BagViewPocket *pocket = &appData->bagView->pockets[appData->bagView->curPocket];
+        Bag_SortPocketSlots(pocket->slots, pocket->count);
+        PlaySE(SEQ_SE_DP_SELECT);
+        BagAppState state = BagAppMainTask_FinishMoveItem(appData);
+        BagApp_UpdateDescriptionOnTopScreen(appData);
+        return state;
     }
 
     if (appData->cursorPos == BAG_APP_CURSOR_POS_RESET_TO_CURR_POCKET) {

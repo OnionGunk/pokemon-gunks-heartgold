@@ -301,6 +301,13 @@ static void SortPocket(ItemSlot *slots, u32 count) {
     }
 }
 
+// Gunk: Start in the bag sorts the open pocket by item number
+void Bag_SortPocketSlots(ItemSlot *slots, u32 count) {
+    if (count > 1) {
+        SortPocket(slots, count);
+    }
+}
+
 BagView *Bag_CreateView(Bag *bag, const u8 *pockets, enum HeapID heapID) {
     BagView *ret = BagView_New(heapID);
     for (u32 i = 0; pockets[i] != POCKET_BAG_VIEW_END; i++) {

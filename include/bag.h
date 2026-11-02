@@ -121,6 +121,7 @@ void Bag_UnregisterItem(Bag *bag, u16 itemId);
 BOOL Bag_HasSpaceForItem(Bag *bag, u16 itemId, u16 quantity, enum HeapID heapID);
 BOOL Bag_AddItem(Bag *bag, u16 itemId, u16 quantity, enum HeapID heapID);
 BOOL Bag_TakeItem(Bag *bag, u16 itemId, u16 quantity, enum HeapID heapID);
+void Bag_SortPocketSlots(ItemSlot *slots, u32 count);
 BOOL Bag_HasItem(Bag *bag, u16 itemId, u16 quantity, enum HeapID heapID);
 
 /*
