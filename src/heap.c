@@ -178,6 +178,9 @@ void Heap_Destroy(enum HeapID heapID) {
     }
 }
 
+// failed allocations since boot; the emulator test suite reads it to catch out-of-memory paths
+u32 gHeapAllocFails;
+
 static void *AllocFromHeapInternal(NNSFndHeapHandle heap, u32 size, s32 alignment, enum HeapID heapID) {
     GF_ASSERT(heap);
 
@@ -190,6 +193,8 @@ static void *AllocFromHeapInternal(NNSFndHeapHandle heap, u32 size, s32 alignmen
         ((MemoryBlock *)ptr)->heapID = heapID;
 
         ptr += sizeof(MemoryBlock);
+    } else {
+        gHeapAllocFails++;
     }
 
     return ptr;
