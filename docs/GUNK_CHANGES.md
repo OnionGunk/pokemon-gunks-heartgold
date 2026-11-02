@@ -17,7 +17,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 
 | # | Change (Platinum commit) | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner "Pokémon Gunk's" / "HeartGold Version"; staff credits title "Pokémon Gunk’s HeartGold Version". | 🟡 |
+| 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner "Pokémon Gunk's" / "HeartGold Version"; staff credits title "Pokémon Gunk’s HeartGold Version". Banner checked in the ROM header (DS menu text); the credits need a finished game to see. | 🟡 |
 | 2 | ROM header title `GUNK PL` (3f119584); game code kept as CPUE so emulators pick the right save type | port | Header title `GUNK HG` (checked in the ROM), game code stays `IPKE`. | ✅ |
 | 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | The user's art, scaled to 189x118 in the 256x120 logo layer, 127 colours (palette entries 0-127; 128-255 belong to the sunburst behind it). Converter: `C:\Projects\gunk-hg-art\convert_logo.py`. Checked on the title screen. | ✅ |
 
@@ -26,8 +26,8 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
 | 4 | 21 PC boxes, up from 18: a living dex through Gen 4 plus 3 spare (7713e967) | adapt | **24 boxes** (the user chose as many as reasonable; 24 fills the PC's 6-per-page box list). `NUM_BOXES` 24, `SAVE_PAGE_MAX` 41, SaveData's heap +0x6000, the PC app's box wraps and thumbnail buffer, the battle PC-full check, and the GTS / Pokéathlon / Pokéwalker pickers (18 meant the party). See PC_BOXES_PLAN.md. Checked: boxes 19-24 in the PC, the 4-page box list, 720 Pokémon saved and reloaded, save tests. GTS and Pokéwalker can't run in an emulator. | ✅ |
-| 5 | Save table grown for DexNav: per-species search levels stored after the PC boxes in the boxes block (5985a222) | port | New save array appended after `SAVE_PCSTORAGE` (keeps every retail array ID). | ⏳ |
-| 6 | Static check that the main save plus extra saves fit in one flash half | port | Same compile-time assert for HG's `SAVE_PAGE_MAX + last extra chunk`. | ⏳ |
+| 5 | Save table grown for DexNav: per-species search levels stored after the PC boxes in the boxes block (5985a222) | adapt | The per-species search levels (and the R species) live in a new 1 KB chunk `SAVE_GUNK` in the normal block (gunk_save.h), not after the PC boxes. Checked by the save suite (save_cycles compares the whole save) and the DexNav play test. | ✅ |
+| 6 | Static check that the main save plus extra saves fit in one flash half | port | Build-time checks in src/save_arrays.c: the extra saves end inside the 64-sector half, and the PC block plus the 16-sector normal block fit in `SAVE_PAGE_MAX`. Checked: with 25 boxes the build fails at the PC check. | ✅ |
 
 ## DexNav
 
@@ -54,8 +54,8 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
 | 17 | INSTANT text speed in Options; new games start on FAST; Options row fits (c0644cff, 9c1ccbc6) | port | HG's `Options.textSpeed` is a 4-bit field, so a fourth value fits. The row keeps its three drawn buttons as a sliding window: SLOW/MID show SLOW MID FAST, FAST/INSTANT show MID FAST INSTANT. Fixed in passing: Platinum's version leaves the last frame's characters uncopied when a message ends without a button wait. | ✅ |
-| 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. | 🟡 |
-| 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px/frame); turn it on. | 🟡 |
+| 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. Built in; not yet measured in a battle (the bar test only settled the HP bar). | 🟡 |
+| 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px per bar update); turned on. Checked: 48 px in 94 frames, one pixel per update (the bars update at 30 Hz, as in vanilla). | ✅ |
 | 20 | Run by default with the Running Shoes, hold B to walk (c0644cff) | skip: HeartGold has it | The Running Shoes button on the touch-screen menu toggles always-run. | — |
 | 21 | Repel prompt: when a Repel wears off and another of the same kind is in the bag, offer to use it (c0644cff) | port | Script command 853 `GunkUseRepel` appended; the kind last used is kept in `VAR_GUNK_LAST_REPEL` (`VAR_UNK_416E`, in the unused end of the var array: no save change). Checked: a Super Repel used from the bag, counter set to 1, one step: "Use another Super Repel?" YES used one (200 steps, one fewer in the bag). | ✅ |
 | 22 | Endless Repel key item, given by Mom with the Running Shoes (c0644cff) | adapt | Item 537 (Max Repel icon). In HG the Running Shoes come from the **Guide Gent** in Cherrygrove, so he gives it (checked by story_sweep: the scene ends as in vanilla and gives all three key items). USE in the bag switches it; the switch is a bit in `VAR_GUNK_SETTINGS` (`VAR_UNK_416F`). Checked: 120 steps in Route 29 grass with it on and no encounter; switched off, a battle within 3 steps. | ✅ |
@@ -69,7 +69,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | 30 | Two registered items: newest on Y, previous on Select, in the two halves of `Bag.registeredItem` (2957e59d) | adapt | HG already stores two registered items (`registeredItems[2]`, the touch-screen buttons) and Y opens a menu to choose. Add: Select uses item 2 directly; Y keeps HG's behaviour. No save change. (Correction: Y uses item 1 directly in HG; the menu is only on the touch screen.) | ✅ |
 | 31 | Honey trees say the hours until Pokémon gather (2957e59d) | skip: no honey trees in HG | — |
 | 32 | Poké Radar says the chain length (2957e59d) | skip: no Poké Radar in HG | — |
-| 33 | Eggs hatch twice as fast (2957e59d) | port | | 🟡 |
+| 33 | Eggs hatch twice as fast (2957e59d) | port | Egg cycles count down by 2 instead of 1. Checked: an egg's cycles went 10 → 8 where vanilla goes 10 → 9 (egg_check.py). | ✅ |
 | 34 | Trade evolutions by level (Kadabra 36, Machoke/Graveler/Haunter 37) and trade items used like evolution stones (2957e59d) | port | Same Pokémon and items exist in HG (data in `evo.json`, `item_data.csv`). An Everstone now also stops Kadabra's level-up evolution (vanilla's Kadabra exception only made sense for trades; Gunk's Platinum still has that hole). | ✅ |
 | 35 | UNLOCK FPS option (from Following Platinum, 211b80ef) | skip (ask) | Came with the follower port, not a user request; HG's field already runs at its own rate. Say if you want it. | — |
 

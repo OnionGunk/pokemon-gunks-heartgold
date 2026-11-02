@@ -379,6 +379,14 @@ const struct ExtraSaveChunkHeader gExtraSaveChunkHeaders[] = {
 
 const int gNumExtraSaveChunkHeaders = NELEMS(gExtraSaveChunkHeaders);
 
+// Gunk: build-time checks that the save still fits in a flash half (64 sectors), as Gunk's Platinum has. Growing a
+// save chunk or the PC past these fails the build instead of corrupting saves.
+// The extra saves (Hall of Fame 3 sectors, Battle Frontier 1, four battle videos 2 each) end inside the half:
+typedef char sGunkExtraSavesFitInHalf[(SAVE_PAGE_MAX + 12 <= 64) ? 1 : -1];
+// The PC block (one chunk, PCStorage plus its footer) and the normal block (16 sectors; save.c asserts that at boot)
+// fit in SAVE_PAGE_MAX sectors:
+typedef char sGunkPCStorageFits[(16 + (sizeof(PCStorage) + sizeof(struct SaveChunkFooter) + SAVE_SECTOR_SIZE - 1) / SAVE_SECTOR_SIZE <= SAVE_PAGE_MAX) ? 1 : -1];
+
 HallOfFame *LoadHallOfFame(SaveData *saveData, enum HeapID heapID, int *ret_p) {
     return ReadExtraSaveChunk(saveData, heapID, 0, ret_p);
 }
