@@ -3,6 +3,7 @@
 #include "global.h"
 
 #include "constants/abilities.h"
+#include "constants/field/map_load.h"
 #include "constants/maps.h"
 #include "constants/weather.h"
 
@@ -16,6 +17,8 @@
 #include "follow_mon.h"
 #include "gf_rtc.h"
 #include "gunk.h"
+#include "gunk_dexnav.h"
+#include "gunk_save.h"
 #include "map_events.h"
 #include "math_util.h"
 #include "metatile_behavior.h"
@@ -116,6 +119,7 @@ static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *en
 static u8 ApplyAbilityEffectToSlotLevel(EncounterSlot *encSlots, int numEncSlots, EncounterGenState *encounterGen, u8 chosenSlot);
 static void EncounterGenState_Init(FieldSystem *fieldSystem, Pokemon *pokemon, const EncounterData *encData, EncounterGenState *encounterGen);
 static void FieldSystem_UpdateTurnFrameCounter(FieldSystem *fieldSystem);
+static BOOL GunkDexNav_TryEncounter(FieldSystem *fieldSystem, EncounterGenState *encounterGen);
 
 static void EncSlotArray_Init_Land(const EncounterData *encData, EncounterSlot *encSlots) {
     TIMEOFDAY timeOfDay = GF_RTC_GetTimeOfDay();
@@ -237,6 +241,10 @@ BOOL FieldSystem_PerformLandOrSurfEncounterCheck(FieldSystem *fieldSystem) {
     EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
     Pokemon *leadMon = Party_GetMonByIndex(party, 0);
     EncounterGenState_Init(fieldSystem, leadMon, encData, &encounterGen);
+    // Gunk: stepping into the DexNav's patch meets the Pokémon hiding there, whatever the encounter rate or a Repel
+    if (GunkDexNav_TryEncounter(fieldSystem, &encounterGen)) {
+        return TRUE;
+    }
     // Gunk: the Endless Repel, while switched on, works like a Repel that never wears off
     if (!RoamerSave_RepelNotInUse(Save_Roamers_Get(fieldSystem->saveData)) || Gunk_IsSettingOn(fieldSystem->saveData, GUNK_SETTING_ENDLESS_REPEL)) {
         Pokemon *mon = GetFirstAliveMonInParty_CrashIfNone(party);
@@ -1428,4 +1436,302 @@ static void FieldSystem_UpdateTurnFrameCounter(FieldSystem *fieldSystem) {
         ++fieldSystem->reverseTurnFrameSteps;
     }
     fieldSystem->lastFacingDirection = facingDirection;
+}
+
+// ---- Gunk: DexNav (gunk_dexnav.h) ----
+
+#define DEXNAV_MIN_DISTANCE    2
+#define DEXNAV_MAX_DISTANCE    4
+#define DEXNAV_LOST_DISTANCE   8
+#define DEXNAV_PLACE_ATTEMPTS  40
+#define DEXNAV_RUSTLE_FRAMES   24
+#define DEXNAV_MAX_LEVEL       255
+#define DEXNAV_SHINY_ODDS      4096
+#define DEXNAV_MAX_CANDIDATES  512
+#define DEXNAV_MAX_SEEDS       (DEXNAV_MAX_CANDIDATES * 200)
+#define DEXNAV_MAX_SHINY_SEEDS 0x100000
+
+// the grass effect a Pokémon walking into tall grass makes (field overlay)
+void ov01_021FF0E4(LocalMapObject *mapObject, int a1, int x, int z, int a4);
+
+typedef struct DexNavFrame {
+    u32 personality;
+    u8 ivs[6];
+    u8 slot;
+} DexNavFrame;
+
+static int DexNav_Abs(int value) {
+    return value < 0 ? -value : value;
+}
+
+// the land slots as a walking encounter here would see them now (time of day, swarm, radio)
+static void DexNav_GetLandSlots(FieldSystem *fieldSystem, EncounterSlot *encSlots) {
+    const EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
+    EncSlotArray_Init_Land(encData, encSlots);
+    EncSlots_Update_LandSwarm(fieldSystem, encData, &encSlots[0], &encSlots[1]);
+    EncSlotArray_Update_HoennSinnohSounds(fieldSystem, encData, encSlots);
+}
+
+int GunkDexNav_ListSpecies(FieldSystem *fieldSystem, u16 *species, int max) {
+    EncounterSlot encSlots[NUM_ENCOUNTERS_LAND];
+    int count = 0;
+
+    if (MapEvents_GetLoadedEncTable(fieldSystem)->encounterRate_walking == 0) {
+        return 0;
+    }
+    DexNav_GetLandSlots(fieldSystem, encSlots);
+    for (int i = 0; i < NUM_ENCOUNTERS_LAND && count < max; i++) {
+        u16 s = encSlots[i].species;
+        BOOL listed = (s == SPECIES_NONE || s == SPECIES_UNOWN);
+        for (int j = 0; j < count && !listed; j++) {
+            listed = species[j] == s;
+        }
+        if (!listed) {
+            species[count++] = s;
+        }
+    }
+    return count;
+}
+
+static u16 DexNav_Rand(u32 *state) {
+    *state = *state * 1103515245 + 24691;
+    return *state >> 16;
+}
+
+static u32 DexNav_Random32(void) {
+    return (LCRandom() << 16) | LCRandom();
+}
+
+static u8 DexNav_SlotFromRoll(u8 roll) {
+    static const u8 sSlotEnds[NUM_ENCOUNTERS_LAND] = { 20, 40, 50, 60, 70, 80, 85, 90, 94, 98, 99, 100 };
+    u8 slot = 0;
+    while (roll >= sSlotEnds[slot]) {
+        slot++;
+    }
+    return slot;
+}
+
+// A wild grass encounter exactly as HeartGold makes one ("Method K"), so the Pokémon passes legality checks: from
+// an RNG seed the slot (% 100), the level roll, the nature (% 25), personality values until one has that nature,
+// then the IVs (CreateBoxMon). The species and level come from the rolled slot.
+static BOOL DexNav_GenerateFrame(u32 seed, u16 slots, DexNavFrame *frame) {
+    u32 state = seed;
+    u8 slot = DexNav_SlotFromRoll(DexNav_Rand(&state) % 100);
+    if ((slots & (1 << slot)) == 0) {
+        return FALSE;
+    }
+    DexNav_Rand(&state); // the level roll: a land slot has one level, but the roll is still made
+    u8 nature = DexNav_Rand(&state) % 25;
+    u32 personality;
+    do {
+        personality = DexNav_Rand(&state);
+        personality |= (u32)DexNav_Rand(&state) << 16;
+    } while (personality % 25 != nature);
+    u16 ivs1 = DexNav_Rand(&state);
+    u16 ivs2 = DexNav_Rand(&state);
+    // HP, Attack, Defense, then Speed, Sp. Atk, Sp. Def, as CreateBoxMon unpacks them
+    frame->ivs[0] = ivs1 & 0x1F;
+    frame->ivs[1] = (ivs1 >> 5) & 0x1F;
+    frame->ivs[2] = (ivs1 >> 10) & 0x1F;
+    frame->ivs[3] = ivs2 & 0x1F;
+    frame->ivs[4] = (ivs2 >> 5) & 0x1F;
+    frame->ivs[5] = (ivs2 >> 10) & 0x1F;
+    frame->personality = personality;
+    frame->slot = slot;
+    return TRUE;
+}
+
+static int DexNav_CountPerfectIVs(const DexNavFrame *frame) {
+    int count = 0;
+    for (int i = 0; i < 6; i++) {
+        count += frame->ivs[i] == 31;
+    }
+    return count;
+}
+
+static int DexNav_SumIVs(const DexNavFrame *frame) {
+    int sum = 0;
+    for (int i = 0; i < 6; i++) {
+        sum += frame->ivs[i];
+    }
+    return sum;
+}
+
+static BOOL DexNav_IsBetter(const DexNavFrame *frame, const DexNavFrame *best) {
+    int perfect = DexNav_CountPerfectIVs(frame);
+    int bestPerfect = DexNav_CountPerfectIVs(best);
+    return perfect > bestPerfect || (perfect == bestPerfect && DexNav_SumIVs(frame) > DexNav_SumIVs(best));
+}
+
+static BOOL DexNav_IsShiny(u32 otId, u32 personality) {
+    return ((otId >> 16) ^ (otId & 0xFFFF) ^ (personality >> 16) ^ (personality & 0xFFFF)) < 8;
+}
+
+// Higher search levels and longer chains roll more encounters and keep the one with the best IVs, and give more
+// shiny rolls; a shiny is searched for among the same legal encounters.
+static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
+    GunkDexNavState *s = &gGunkDexNav;
+    int shinyRolls = 1 + s->searchLevel / 10 + s->chain / 5;
+    int candidates = 1 + s->searchLevel / 2 + s->chain * 2;
+    EncounterSlot encSlots[NUM_ENCOUNTERS_LAND];
+    u16 slots = 0;
+    DexNavFrame frame, best;
+    int found = 0;
+
+    DexNav_GetLandSlots(fieldSystem, encSlots);
+    for (int i = 0; i < NUM_ENCOUNTERS_LAND; i++) {
+        if (encSlots[i].species == s->species) {
+            slots |= 1 << i;
+        }
+    }
+    if (slots == 0) {
+        return FALSE;
+    }
+    if (candidates > DEXNAV_MAX_CANDIDATES) {
+        candidates = DEXNAV_MAX_CANDIDATES;
+    }
+
+    s->shiny = FALSE;
+    for (int i = 0; i < shinyRolls; i++) {
+        if (LCRandRange(DEXNAV_SHINY_ODDS) == 0) {
+            for (int attempt = 0; attempt < DEXNAV_MAX_SHINY_SEEDS; attempt++) {
+                if (DexNav_GenerateFrame(DexNav_Random32(), slots, &frame) && DexNav_IsShiny(otId, frame.personality)) {
+                    best = frame;
+                    found = 1;
+                    s->shiny = TRUE;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    for (int attempt = 0; !s->shiny && found < candidates && attempt < DEXNAV_MAX_SEEDS; attempt++) {
+        if (DexNav_GenerateFrame(DexNav_Random32(), slots, &frame)) {
+            if (found == 0 || DexNav_IsBetter(&frame, &best)) {
+                best = frame;
+            }
+            found++;
+        }
+    }
+    if (found == 0) {
+        return FALSE;
+    }
+
+    s->personality = best.personality;
+    s->level = encSlots[best.slot].minLevel;
+    s->perfectIVs = DexNav_CountPerfectIVs(&best);
+    for (int i = 0; i < 6; i++) {
+        s->ivs[i] = best.ivs[i];
+    }
+    return TRUE;
+}
+
+static void DexNav_Rustle(FieldSystem *fieldSystem) {
+    ov01_021FF0E4(PlayerAvatar_GetMapObject(fieldSystem->playerAvatar), 0, gGunkDexNav.x, gGunkDexNav.z, 0);
+}
+
+int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
+    GunkDexNavState *s = &gGunkDexNav;
+    int playerX = PlayerAvatar_GetXCoord(fieldSystem->playerAvatar);
+    int playerZ = PlayerAvatar_GetZCoord(fieldSystem->playerAvatar);
+    int span = DEXNAV_MAX_DISTANCE * 2 + 1;
+    u16 list[NUM_ENCOUNTERS_LAND];
+    int count = GunkDexNav_ListSpecies(fieldSystem, list, NUM_ENCOUNTERS_LAND);
+    BOOL here = FALSE;
+
+    s->active = FALSE;
+    if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD || Save_VarsFlags_CheckBugContestFlag(Save_VarsFlags_Get(fieldSystem->saveData))) {
+        return DEXNAV_SEARCH_NOT_HERE;
+    }
+    for (int i = 0; i < count; i++) {
+        here |= list[i] == species;
+    }
+    if (!here) {
+        return DEXNAV_SEARCH_NOT_HERE;
+    }
+    Save_GunkSave_Get(fieldSystem->saveData)->dexNavSpecies = species;
+
+    for (int attempt = 0; attempt < DEXNAV_PLACE_ATTEMPTS; attempt++) {
+        int dx = LCRandRange(span) - DEXNAV_MAX_DISTANCE;
+        int dz = LCRandRange(span) - DEXNAV_MAX_DISTANCE;
+        if (DexNav_Abs(dx) < DEXNAV_MIN_DISTANCE && DexNav_Abs(dz) < DEXNAV_MIN_DISTANCE) {
+            continue;
+        }
+        if (!MetatileBehavior_IsTallGrass(GetMetatileBehavior(fieldSystem, playerX + dx, playerZ + dz))) {
+            continue;
+        }
+        s->species = species;
+        s->x = playerX + dx;
+        s->z = playerZ + dz;
+        s->mapId = fieldSystem->location->mapId;
+        if (s->chainSpecies != species || s->chainMapId != s->mapId) {
+            s->chain = 0;
+        }
+        s->searchLevel = Save_GunkSave_Get(fieldSystem->saveData)->dexNavSearchLevel[species];
+        if (!DexNav_RollHiddenMon(fieldSystem, PlayerProfile_GetTrainerID(Save_PlayerData_GetProfile(fieldSystem->saveData)))) {
+            return DEXNAV_SEARCH_NOT_HERE;
+        }
+        s->active = TRUE;
+        s->frames = 0;
+        DexNav_Rustle(fieldSystem);
+        return DEXNAV_SEARCH_STARTED;
+    }
+    return DEXNAV_SEARCH_NO_GRASS;
+}
+
+// every frame while the field runs (FieldSystem_Control): keeps the patch rustling, and drops the search when the
+// player leaves the map or wanders off
+void GunkDexNav_Update(FieldSystem *fieldSystem) {
+    GunkDexNavState *s = &gGunkDexNav;
+    if (!s->active) {
+        return;
+    }
+    int playerX = PlayerAvatar_GetXCoord(fieldSystem->playerAvatar);
+    int playerZ = PlayerAvatar_GetZCoord(fieldSystem->playerAvatar);
+    if (fieldSystem->location->mapId != s->mapId || DexNav_Abs(playerX - s->x) > DEXNAV_LOST_DISTANCE || DexNav_Abs(playerZ - s->z) > DEXNAV_LOST_DISTANCE) {
+        s->active = FALSE;
+        s->chain = 0; // walking away breaks the chain too
+        return;
+    }
+    if (++s->frames >= DEXNAV_RUSTLE_FRAMES) {
+        s->frames = 0;
+        DexNav_Rustle(fieldSystem);
+    }
+}
+
+static BOOL GunkDexNav_TryEncounter(FieldSystem *fieldSystem, EncounterGenState *encounterGen) {
+    GunkDexNavState *s = &gGunkDexNav;
+    BattleSetup *battleSetup;
+
+    if (!s->active || fieldSystem->location->mapId != s->mapId
+        || (int)PlayerAvatar_GetXCoord(fieldSystem->playerAvatar) != s->x || (int)PlayerAvatar_GetZCoord(fieldSystem->playerAvatar) != s->z) {
+        return FALSE;
+    }
+    FieldSystem_CreateBattleSetupForWildBattle(fieldSystem, ENCOUNTER_CONTEXT_REGULAR, &battleSetup);
+    BattleSetup_InitFromFieldSystem(battleSetup, fieldSystem);
+    Pokemon *mon = AllocMonZeroed(HEAP_ID_FIELD2);
+    ZeroMonData(mon);
+    CreateMon(mon, s->species, s->level, 0, TRUE, s->personality, OT_ID_PRESET, encounterGen->playerId);
+    for (int i = 0; i < 6; i++) {
+        u32 iv = s->ivs[i];
+        SetMonData(mon, MON_DATA_HP_IV + i, &iv);
+    }
+    CalcMonLevelAndStats(mon);
+    addGeneratedMonToBattleSetupParty(BATTLER_ENEMY, encounterGen, mon, battleSetup);
+    Heap_Free(mon);
+    sub_02050B08(fieldSystem, battleSetup);
+    fieldSystem->encounterInhibitSteps = 0;
+
+    // the normal block holds the search levels, so any save keeps them
+    u8 *level = &Save_GunkSave_Get(fieldSystem->saveData)->dexNavSearchLevel[s->species];
+    if (*level < DEXNAV_MAX_LEVEL) {
+        (*level)++;
+    }
+    if (s->chain < 999) {
+        s->chain++;
+    }
+    s->chainSpecies = s->species;
+    s->chainMapId = s->mapId;
+    s->active = FALSE;
+    return TRUE;
 }

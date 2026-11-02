@@ -4788,6 +4788,17 @@
 	.short \item
 	.endm
 
+	.macro GunkDexNavMenu result
+	.short 854
+	.short \result
+	.endm
+
+	.macro GunkDexNavSearch species, result
+	.short 855
+	.short \species
+	.short \result
+	.endm
+
 	// Script headers
 
 	.macro MapScript kind, script

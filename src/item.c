@@ -672,6 +672,7 @@ static const u16 sItemNarcIds[ITEMS_COUNT][4] = {
     // Gunk: key items with the Max Repel's and the Exp. Share's icons
     [ITEM_ENDLESS_REPEL] = { NARC_item_data_0514_bin, NARC_item_icon_item_icon_109_NCGR, NARC_item_icon_item_icon_111_NCLR, AGB_ITEM_NONE                  },
     [ITEM_EXP_ALL] = { NARC_item_data_0515_bin, NARC_item_icon_item_icon_256_NCGR, NARC_item_icon_item_icon_257_NCLR, AGB_ITEM_NONE                        },
+    [ITEM_DEXNAV] = { NARC_item_data_0516_bin, NARC_item_icon_item_icon_747_NCGR, NARC_item_icon_item_icon_748_NCLR, AGB_ITEM_NONE                         },
 };
 
 void MoveItemSlotInList(ItemSlot *slots, int from, int to, int pocket, enum HeapID heapID) {

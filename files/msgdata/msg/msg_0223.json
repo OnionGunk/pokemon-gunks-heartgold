@@ -2156,6 +2156,10 @@
     {
       "id": "msg_0223_00538",
       "en_US": "an {COLOR 255}Exp. All{COLOR 0}"
+    },
+    {
+      "id": "msg_0223_00539",
+      "en_US": "a {COLOR 255}DexNav{COLOR 0}"
     }
   ]
 }

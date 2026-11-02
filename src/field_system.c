@@ -9,6 +9,7 @@
 #include "field/signpost.h"
 
 #include "field_warp_tasks.h"
+#include "gunk_dexnav.h"
 #include "main.h"
 #include "map_events.h"
 #include "math_util.h"
@@ -208,6 +209,11 @@ void FieldSystem_Control(FieldSystem *fieldSystem) {
     FieldInput fieldInput;
 
     BOOL movementAllowed = FieldSystem_IsPlayerMovementAllowed(fieldSystem);
+
+    // Gunk: the DexNav's patch (its code is in overlay 2, loaded with the overworld field)
+    if (gGunkDexNav.active && fieldSystem->runningFieldMap && fieldSystem->mapLoadType == MAP_LOAD_TYPE_OVERWORLD) {
+        GunkDexNav_Update(fieldSystem);
+    }
 
     if (movementAllowed) {
         PlayerAvatar_UpdateMovement(fieldSystem->playerAvatar);

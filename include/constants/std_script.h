@@ -63,6 +63,8 @@
 #define std_fade_heal_fade             2069
 #define std_play_rival_outro_music     2070
 #define std_fade_end_rival_outro_music 2071
+#define std_gunk_dexnav                2072 // Gunk: the DexNav key item
+#define std_gunk_dexnav_search_again   2073 // Gunk: R searches again
 
 #define _std_bookshelves       2500
 #define std_picture_books      2500

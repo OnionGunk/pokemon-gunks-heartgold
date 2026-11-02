@@ -77,6 +77,8 @@
 	ScrDef scr_seq_0003_069
 	ScrDef scr_seq_0003_070
 	ScrDef scr_seq_0003_071
+	ScrDef scr_seq_0003_072
+	ScrDef scr_seq_0003_073
 	ScrDefEnd
 
 scr_seq_0003_002:
@@ -1865,5 +1867,57 @@ _GunkTutorNoMoves:
 _GunkTutorOneMove:
 	NPCMsg msg_0040_00123
 	GoTo _0A2E
+
+// Gunk: the DexNav (std_gunk_dexnav): pick one of the area's grass Pokémon, then search for it
+scr_seq_0003_072:
+	LockAll
+	NPCMsg msg_0040_00129
+	TouchscreenMenuHide
+	GunkDexNavMenu VAR_SPECIAL_RESULT
+	TouchscreenMenuShow
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfEq _GunkDexNavNoGrass
+	Compare VAR_SPECIAL_RESULT, 0xFFFE
+	GoToIfGe _GunkDexNavEnd
+	GunkDexNavSearch VAR_SPECIAL_RESULT, VAR_SPECIAL_x8005
+	GoTo _GunkDexNavResult
+
+// R (std_gunk_dexnav_search_again): the species last picked
+scr_seq_0003_073:
+	LockAll
+	GunkDexNavSearch 0, VAR_SPECIAL_x8005
+	GoTo _GunkDexNavResult
+
+_GunkDexNavResult:
+	Compare VAR_SPECIAL_x8005, 1
+	GoToIfEq _GunkDexNavNotHere
+	Compare VAR_SPECIAL_x8005, 2
+	GoToIfEq _GunkDexNavNoTallGrass
+	PlaySE SEQ_SE_DP_SELECT
+	NPCMsg msg_0040_00137
+	WaitABPress
+	Compare VAR_SPECIAL_x8004, 0
+	GoToIfEq _GunkDexNavEnd
+	NPCMsg msg_0040_00138
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavNoGrass:
+	NPCMsg msg_0040_00134
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavNotHere:
+	NPCMsg msg_0040_00135
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavNoTallGrass:
+	NPCMsg msg_0040_00136
+	WaitABPress
+_GunkDexNavEnd:
+	CloseMsg
+	ReleaseAll
+	End
 
 	.balign 4, 0

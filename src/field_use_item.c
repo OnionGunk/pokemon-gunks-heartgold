@@ -1,6 +1,7 @@
 #include "field_use_item.h"
 
 #include "constants/items.h"
+#include "constants/std_script.h"
 #include "constants/sndseq.h"
 
 #include "field/fieldmap.h"
@@ -96,6 +97,8 @@ static void ItemMenuUseFunc_VSRecorder(struct ItemMenuUseData *data, const struc
 static BOOL ItemFieldUseFunc_VSRecorder(struct ItemFieldUseData *data);
 static void *_VsRecorderInit(FieldSystem *fieldSystem);
 static BOOL KeyItemIdSpawnsSubprocess(FieldSystem *fieldSystem, u16 itemId);
+static void ItemMenuUseFunc_DexNav(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2);
+static BOOL ItemFieldUseFunc_DexNav(struct ItemFieldUseData *data);
 static void RegisteredItem_GoToPrintErrorTask(struct ItemFieldUseData *data, enum ItemUseError error);
 static BOOL Task_RegisteredItem_GoToApp(TaskManager *taskManager);
 static void RegisteredItem_CreateGoToAppTask(struct ItemFieldUseData *data, FieldApplicationWorkCtor ctor, BOOL no_app);
@@ -131,6 +134,7 @@ static const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     { NULL,                        ItemFieldUseFunc_GbSounds,    NULL                        },
     { ItemMenuUseFunc_Gracidea,    ItemFieldUseFunc_Gracidea,    NULL                        },
     { ItemMenuUseFunc_VSRecorder,  ItemFieldUseFunc_VSRecorder,  NULL                        },
+    { ItemMenuUseFunc_DexNav,      ItemFieldUseFunc_DexNav,      NULL                        }, // Gunk
 };
 
 void *GetItemFieldUseFunc(int funcType, u16 itemType) {
@@ -876,4 +880,15 @@ static void RegisteredItem_CreateGoToAppTask(struct ItemFieldUseData *data, Fiel
     data->ctor = ctor;
     data->no_app = no_app;
     FieldSystem_CreateTask(data->fieldSystem, Task_RegisteredItem_GoToApp, data);
+}
+
+// Gunk: the DexNav runs its common script (the area's Pokémon, then the search), through the same exit task the
+// Alph Chamber items use
+static void ItemMenuUseFunc_DexNav(struct ItemMenuUseData *data, const struct ItemCheckUseData *dat2) {
+    ExitMenuAndJumpToAlphChamberReaction(data, dat2, std_gunk_dexnav);
+}
+
+static BOOL ItemFieldUseFunc_DexNav(struct ItemFieldUseData *data) {
+    FieldSystem_CreateTask(data->fieldSystem, Task_UseItemInAlphChamber, CreateAlphItemUseWork(std_gunk_dexnav, data->itemId, 0, 0, 0));
+    return FALSE;
 }

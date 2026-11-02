@@ -857,6 +857,8 @@ const ScrCmdFunc gScriptCmdTable[] = {
     ScrCmd_Capitalize,
     ScrCmd_BufferDeptStoreFloorNo,
     ScrCmd_GunkUseRepel, // 853, Gunk
+    ScrCmd_GunkDexNavMenu, // 854, Gunk
+    ScrCmd_GunkDexNavSearch, // 855, Gunk
 };
 const u32 sNumScriptCmds = NELEMS(gScriptCmdTable);
 

@@ -4125,6 +4125,10 @@
     {
       "id": "msg_0221_00538",
       "en_US": ["Switched on, Pokémon that didn’t battle\n", "get half the Exp. Points (and the\n", "Effort Values) of a defeated Pokémon."]
+    },
+    {
+      "id": "msg_0221_00539",
+      "en_US": ["Lists the Pokémon in the grass here. Pick\n", "one, or press R, to find it hiding nearby.\n", "Searching often finds better Pokémon."]
     }
   ]
 }

@@ -958,7 +958,8 @@
 // Gunk
 #define ITEM_ENDLESS_REPEL 537
 #define ITEM_EXP_ALL       538
-#define ITEMS_COUNT       539
+#define ITEM_DEXNAV        539
+#define ITEMS_COUNT       540
 
 #define ITEM_MIN 1
 #define ITEM_MAX ITEMS_COUNT - 1

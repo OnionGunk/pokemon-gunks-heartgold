@@ -807,6 +807,46 @@
     {
       "id": "msg_0040_00128",
       "en_US": ["{STRVAR_1 3, 0, 0} used the\n", "{STRVAR_1 8, 1, 0}."]
+    },
+    {
+      "id": "msg_0040_00129",
+      "en_US": "Which Pokémon should the DexNav find?"
+    },
+    {
+      "id": "msg_0040_00130",
+      "en_US": "●{STRVAR_1 1, 0, 0}"
+    },
+    {
+      "id": "msg_0040_00131",
+      "en_US": "○{STRVAR_1 1, 0, 0}"
+    },
+    {
+      "id": "msg_0040_00132",
+      "en_US": "?????"
+    },
+    {
+      "id": "msg_0040_00133",
+      "en_US": "CANCEL"
+    },
+    {
+      "id": "msg_0040_00134",
+      "en_US": "The DexNav shows no Pokémon in the grass here."
+    },
+    {
+      "id": "msg_0040_00135",
+      "en_US": ["{STRVAR_1 1, 0, 0} isn’t in the grass here\n", "at this time of day."]
+    },
+    {
+      "id": "msg_0040_00136",
+      "en_US": ["There’s no tall grass close enough\n", "for a Pokémon to hide in."]
+    },
+    {
+      "id": "msg_0040_00137",
+      "en_US": ["A {STRVAR_1 1, 0, 0} Lv. {STRVAR_1 52, 1, 0} is hiding\n", "in the rustling grass!\r", "Search Lv. {STRVAR_1 52, 2, 0}  Chain {STRVAR_1 52, 3, 0}\n", "Perfect IVs: {STRVAR_1 52, 4, 0} of 6"]
+    },
+    {
+      "id": "msg_0040_00138",
+      "en_US": ["It’s shining! A rare-colored\n", "Pokémon is hiding there!"]
     }
   ]
 }

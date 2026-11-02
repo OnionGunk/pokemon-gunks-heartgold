@@ -3,6 +3,7 @@
 #include "global.h"
 
 #include "constants/badge.h"
+#include "constants/field/map_load.h"
 #include "constants/field_poison.h"
 #include "constants/game_stats.h"
 #include "constants/global_fieldmap.h"
@@ -25,6 +26,7 @@
 #include "follow_mon.h"
 #include "game_stats.h"
 #include "get_egg.h"
+#include "gunk_save.h"
 #include "gymmick.h"
 #include "gymmick_init.h"
 #include "map_events.h"
@@ -298,6 +300,14 @@ int FieldInput_Process(FieldInput *fieldInput, FieldSystem *fieldSystem) {
             ov01_021F6B64_thunk(fieldSystem, fieldInput->registeredItem);
             return registeredItemResult;
         }
+    }
+
+    // Gunk: R searches again for the Pokémon last picked in the DexNav
+    if ((fieldInput->newKeys & PAD_BUTTON_R) && fieldInput->unk0_8 && fieldSystem->mapLoadType == MAP_LOAD_TYPE_OVERWORLD
+        && Save_GunkSave_Get(fieldSystem->saveData)->dexNavSpecies != SPECIES_NONE
+        && Bag_HasItem(Save_Bag_Get(fieldSystem->saveData), ITEM_DEXNAV, 1, HEAP_ID_FIELD1)) {
+        StartMapSceneScript(fieldSystem, std_gunk_dexnav_search_again, NULL);
+        return 1;
     }
 
     if (fieldInput->menu && FieldSystem_MapIsNotMysteryZone(fieldSystem) == TRUE) {
