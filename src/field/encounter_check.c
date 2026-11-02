@@ -218,6 +218,16 @@ static void EncSlots_Update_FishingSwarm(FieldSystem *fieldSystem, u8 rodType, c
 }
 
 BOOL FieldSystem_PerformLandOrSurfEncounterCheck(FieldSystem *fieldSystem) {
+    // Gunk: stepping into the DexNav's patch meets the Pokémon hiding there, whatever the encounter rate, a Repel or
+    // the few encounter-free steps after a script or battle
+    if (gGunkDexNav.active) {
+        EncounterGenState dexNavGen;
+        EncounterGenState_Init(fieldSystem, Party_GetMonByIndex(SaveArray_Party_Get(fieldSystem->saveData), 0), MapEvents_GetLoadedEncTable(fieldSystem), &dexNavGen);
+        if (GunkDexNav_TryEncounter(fieldSystem, &dexNavGen)) {
+            return TRUE;
+        }
+    }
+
     if (fieldSystem->encounterInhibitSteps <= 3) {
         return FALSE;
     }
@@ -241,10 +251,6 @@ BOOL FieldSystem_PerformLandOrSurfEncounterCheck(FieldSystem *fieldSystem) {
     EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
     Pokemon *leadMon = Party_GetMonByIndex(party, 0);
     EncounterGenState_Init(fieldSystem, leadMon, encData, &encounterGen);
-    // Gunk: stepping into the DexNav's patch meets the Pokémon hiding there, whatever the encounter rate or a Repel
-    if (GunkDexNav_TryEncounter(fieldSystem, &encounterGen)) {
-        return TRUE;
-    }
     // Gunk: the Endless Repel, while switched on, works like a Repel that never wears off
     if (!RoamerSave_RepelNotInUse(Save_Roamers_Get(fieldSystem->saveData)) || Gunk_IsSettingOn(fieldSystem->saveData, GUNK_SETTING_ENDLESS_REPEL)) {
         Pokemon *mon = GetFirstAliveMonInParty_CrashIfNone(party);
