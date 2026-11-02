@@ -11,14 +11,14 @@ Compatibility rules carried over from the Platinum hack: append script commands,
 instead of renumbering; don't change struct layouts unless a feature needs it; grow save blocks only within the
 flash budget (see "Save budget" below). No difficulty changes.
 
-Status: ✅ done and tested, 🔨 in progress, ⏳ planned.
+Status: ✅ done and tested in the emulator, 🟡 built and passes the save suite but the feature itself not yet exercised in the emulator, ⏳ planned.
 
 ## Identity
 
 | # | Change (Platinum commit) | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner: "Pokémon Gunk's HeartGold Version". Credits line later, with the text work. | ⏳ |
-| 2 | ROM header title `GUNK PL` (3f119584); game code kept as CPUE so emulators pick the right save type | port | Header title `GUNK HG`, game code stays `IPKE`. | ⏳ |
+| 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner "Pokémon Gunk's" / "HeartGold Version"; staff credits title "Pokémon Gunk’s HeartGold Version". | 🟡 |
+| 2 | ROM header title `GUNK PL` (3f119584); game code kept as CPUE so emulators pick the right save type | port | Header title `GUNK HG` (checked in the ROM), game code stays `IPKE`. | ✅ |
 | 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | New HeartGold title logo art; needs the HG title screen's graphics format. | ⏳ |
 
 ## Save and storage
@@ -54,22 +54,22 @@ Status: ✅ done and tested, 🔨 in progress, ⏳ planned.
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
 | 17 | INSTANT text speed in Options; new games start on FAST; Options row fits (c0644cff, 9c1ccbc6) | port | HG's `Options.textSpeed` is a 4-bit field, so a fourth value fits. | ⏳ |
-| 18 | EXP bar fills twice as fast (c0644cff) | port | | ⏳ |
-| 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px/frame); turn it on. | ⏳ |
+| 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. | 🟡 |
+| 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px/frame); turn it on. | 🟡 |
 | 20 | Run by default with the Running Shoes, hold B to walk (c0644cff) | skip: HeartGold has it | The Running Shoes button on the touch-screen menu toggles always-run. | — |
 | 21 | Repel prompt: when a Repel wears off and another of the same kind is in the bag, offer to use it (c0644cff) | port | New script commands appended. | ⏳ |
 | 22 | Endless Repel key item, given by Mom with the Running Shoes (c0644cff) | port | New item appended after `ITEM_ENIGMA_STONE` (536); Mom in New Bark gives it with the Running Shoes. | ⏳ |
-| 23 | Reusable TMs (e8f1b80d) | port | | ⏳ |
+| 23 | Reusable TMs (e8f1b80d) | port | | 🟡 |
 | 24 | Field moves without the move: Pokémon that could learn an HM you own can use it, badges still required; party menu lists them (e8f1b80d) | port | HG's field moves: Cut, Fly, Surf, Strength, Whirlpool, Rock Smash, Waterfall, Rock Climb (+ Headbutt tutor move, not an HM: left alone). | ⏳ |
 | 25 | Move Tutor in every Pokémon Center: remembers and forgets moves for free (e8f1b80d) | port | HG already has the Move Relearner (Blackthorn, Heart Scale) and the Move Deleter; this adds a free one to every Center as a new common script. | ⏳ |
 | 26 | Summary screen: A on the Skills page cycles stats / IVs / EVs (2957e59d) | port | | ⏳ |
 | 27 | Exp. All key item from Mom: Pokémon that didn't battle get half the EXP and EVs (2957e59d) | port | HG has only the held Exp. Share. New item appended. | ⏳ |
-| 28 | Vitamins work up to 252 EVs (2957e59d) | port | | ⏳ |
+| 28 | Vitamins work up to 252 EVs (2957e59d) | port | | 🟡 |
 | 29 | Bag: Start sorts the open pocket (2957e59d) | port | | ⏳ |
 | 30 | Two registered items: newest on Y, previous on Select, in the two halves of `Bag.registeredItem` (2957e59d) | adapt | HG already stores two registered items (`registeredItems[2]`, the touch-screen buttons) and Y opens a menu to choose. Add: Select uses item 2 directly; Y keeps HG's behaviour. No save change. | ⏳ |
 | 31 | Honey trees say the hours until Pokémon gather (2957e59d) | skip: no honey trees in HG | — |
 | 32 | Poké Radar says the chain length (2957e59d) | skip: no Poké Radar in HG | — |
-| 33 | Eggs hatch twice as fast (2957e59d) | port | | ⏳ |
+| 33 | Eggs hatch twice as fast (2957e59d) | port | | 🟡 |
 | 34 | Trade evolutions by level (Kadabra 36, Machoke/Graveler/Haunter 37) and trade items used like evolution stones (2957e59d) | port | Same Pokémon and items exist in HG. | ⏳ |
 | 35 | UNLOCK FPS option (from Following Platinum, 211b80ef) | skip (ask) | Came with the follower port, not a user request; HG's field already runs at its own rate. Say if you want it. | — |
 
@@ -77,9 +77,9 @@ Status: ✅ done and tested, 🔨 in progress, ⏳ planned.
 
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 36 | `gHeapAllocFails` counter for the emulator suite (9c1ccbc6) | port | | ⏳ |
+| 36 | `gHeapAllocFails` counter for the emulator suite (9c1ccbc6) | port | | ✅ |
 | 37 | Test builds: `gTestSaveMode` start points, warp anywhere, follower off (01b7f2a7, 211b80ef, 18ed578b, acfccac7) | adapt | HG test build: start in New Bark / post-game save; warp anywhere. | ⏳ |
-| 38 | BizHawk harness and suite (`pokemon-platinum-dexnav/emu`) | adapt | Copy to `C:\Projects\hg-tools\emu`, point at HG ROMs and HG linker-map symbols, HG save layout in the checksum validator. | ⏳ |
+| 38 | BizHawk harness and suite (`pokemon-platinum-dexnav/emu`) | adapt | Copy to `C:\Projects\hg-tools\emu`, point at HG ROMs and HG linker-map symbols, HG save layout in the checksum validator. | ✅ |
 
 ## Script commands and common scripts
 
@@ -93,6 +93,21 @@ Platinum appended 26 script commands and 6 common scripts. HeartGold needs these
 | ToggleExpAll | port | |
 | 17 follower commands (GetPokemonFollowerPartySlot … GetPokemonFollowerDirFromPlayer) | skip | |
 | Common scripts: DexNav, DexNavBattle, DexNavMenu, EndlessRepel, MoveTutor, ExpAll | port | appended after HG's last common script |
+
+## Test results (2026-11-02)
+
+`C:\Projects\hg-tools\emu\suite`, BizHawk, emulator minimized. Both builds start from the real intro (title, Oak,
+bedroom, Mom unlocks Save); no test hooks in the ROM.
+
+| Test | vanilla (= retail) | Gunk's HG at 217aa5527 |
+|---|---|---|
+| save_cycles (3 saves, power cycle, RAM == cart, position) | pass | pass |
+| crash_after_save | pass | pass |
+| torn_save (crash at 9 points during a save) | pass | pass: +120f nothing written yet; +170 to +560f one torn block, falls back to the previous save; +760f the new save |
+| backup_recovery (newest save damaged) | pass | pass |
+
+Not yet exercised in the emulator: teaching a TM, vitamins past 100, egg hatching speed, the bar speeds in battle,
+the DS menu banner text.
 
 ## Plan for the remaining ports
 
