@@ -19,7 +19,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 |---|---|---|---|---|
 | 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner "Pokémon Gunk's" / "HeartGold Version"; staff credits title "Pokémon Gunk’s HeartGold Version". | 🟡 |
 | 2 | ROM header title `GUNK PL` (3f119584); game code kept as CPUE so emulators pick the right save type | port | Header title `GUNK HG` (checked in the ROM), game code stays `IPKE`. | ✅ |
-| 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | New HeartGold title logo art; needs the HG title screen's graphics format. | ⏳ |
+| 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | New HeartGold title logo art; needs the HG title screen's graphics format. HG's logo is `files/demo/title/titledemo/titledemo_00000003.png` (256x120, 8bpp, own palette). "GUNK'S" needs a U and a K, which the HeartGold logo doesn't contain: **question for the user** (new lettering, or their own art). | ⏳ |
 
 ## Save and storage
 
@@ -47,7 +47,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | 13 | Follower cutscene script edits in 100 event scripts and 41 map event files (566793ec) | skip | — |
 | 14 | Surf recall/shore wait, battles, bikes, doors, warp panels, escalators, berry watering, reflections (ccbddd93, 211b80ef, 18ed578b) | skip | — |
 | 15 | Follower crash/freeze fixes: double battle send-out (3f142499), wait for last walk (96f8afb0) | skip: Following Platinum code only | — |
-| 16 | Scenes freezing when a walk ends during a screen effect: the movement-end handler found the script through the *current* field task (c026a1c9) | adapt | Check whether HG's movement-end handler has the same pattern; HG's own follower hops can hit it. Port the fix only if it does. | ⏳ |
+| 16 | Scenes freezing when a walk ends during a screen effect: the movement-end handler found the script through the *current* field task (c026a1c9) | adapt | Check whether HG's movement-end handler has the same pattern; HG's own follower hops can hit it. Port the fix only if it does. **HG has the same pattern** (`_RunObjectEventMovement` in `src/scrcmd_c.c`); ported: the walk keeps its script environment. Checked: the intro and Lyra's scene outside the house run, suite 4/4. | ✅ |
 
 ## Quality of life
 
@@ -139,11 +139,8 @@ before the next.
    (536) in `items.h` and `item_data.csv` (+ names, descriptions, icons); new script commands appended to
    `gScriptCmdTable`; Mom in New Bark gives them with the Running Shoes. Exp. All needs the battle EXP code
    (src/battle) to give half EXP and EVs to party members that didn't battle.
-7. **21 PC boxes (#4).** First decompile-or-map every box-count dependency in overlay 14 (the PC app is assembly):
-   loops to 18, wrap-arounds, and per-box arrays in its working memory. Then `NUM_BOXES` 21, `SAVE_PAGE_MAX` 35 -> 38
-   (the PC block grows from 19 to 22 sectors; the extra saves shift to 38+ and still end inside the 64-sector half),
-   box names 19-21 appended to msg_0024, and a full-boxes test (630 Pokémon saved, power cycled, compared) plus the
-   torn-save test. Highest risk to saves, so it goes after the others are stable.
+7. **21 PC boxes (#4).** Every 18-box dependency is mapped in [PC_BOXES_PLAN.md](PC_BOXES_PLAN.md), with the open
+   question of 21 vs 24 boxes (the box list shows 6 per page).
 8. **DexNav (#7-#10).** Key item with a touch-screen species grid (caught / seen silhouette / unseen "?"), search,
    chains and levels; legal Method K rolls; levels saved in a new save array appended after `SAVE_PCSTORAGE` (box
    block, after #7 settles that block's size); gift from Lyra/Ethan after the Route 29 catching tutorial.
