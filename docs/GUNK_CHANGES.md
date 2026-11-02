@@ -53,24 +53,24 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 17 | INSTANT text speed in Options; new games start on FAST; Options row fits (c0644cff, 9c1ccbc6) | port | HG's `Options.textSpeed` is a 4-bit field, so a fourth value fits. | ⏳ |
+| 17 | INSTANT text speed in Options; new games start on FAST; Options row fits (c0644cff, 9c1ccbc6) | port | HG's `Options.textSpeed` is a 4-bit field, so a fourth value fits. The row keeps its three drawn buttons as a sliding window: SLOW/MID show SLOW MID FAST, FAST/INSTANT show MID FAST INSTANT. Fixed in passing: Platinum's version leaves the last frame's characters uncopied when a message ends without a button wait. | ✅ |
 | 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. | 🟡 |
 | 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px/frame); turn it on. | 🟡 |
 | 20 | Run by default with the Running Shoes, hold B to walk (c0644cff) | skip: HeartGold has it | The Running Shoes button on the touch-screen menu toggles always-run. | — |
 | 21 | Repel prompt: when a Repel wears off and another of the same kind is in the bag, offer to use it (c0644cff) | port | New script commands appended. | ⏳ |
 | 22 | Endless Repel key item, given by Mom with the Running Shoes (c0644cff) | port | New item appended after `ITEM_ENIGMA_STONE` (536); Mom in New Bark gives it with the Running Shoes. | ⏳ |
-| 23 | Reusable TMs (e8f1b80d) | port | | 🟡 |
+| 23 | Reusable TMs (e8f1b80d) | port | | ✅ |
 | 24 | Field moves without the move: Pokémon that could learn an HM you own can use it, badges still required; party menu lists them (e8f1b80d) | port | HG's field moves: Cut, Fly, Surf, Strength, Whirlpool, Rock Smash, Waterfall, Rock Climb (+ Headbutt tutor move, not an HM: left alone). | ⏳ |
 | 25 | Move Tutor in every Pokémon Center: remembers and forgets moves for free (e8f1b80d) | port | HG already has the Move Relearner (Blackthorn, Heart Scale) and the Move Deleter; this adds a free one to every Center as a new common script. | ⏳ |
 | 26 | Summary screen: A on the Skills page cycles stats / IVs / EVs (2957e59d) | port | | ⏳ |
 | 27 | Exp. All key item from Mom: Pokémon that didn't battle get half the EXP and EVs (2957e59d) | port | HG has only the held Exp. Share. New item appended. | ⏳ |
-| 28 | Vitamins work up to 252 EVs (2957e59d) | port | | 🟡 |
+| 28 | Vitamins work up to 252 EVs (2957e59d) | port | | ✅ |
 | 29 | Bag: Start sorts the open pocket (2957e59d) | port | | ⏳ |
 | 30 | Two registered items: newest on Y, previous on Select, in the two halves of `Bag.registeredItem` (2957e59d) | adapt | HG already stores two registered items (`registeredItems[2]`, the touch-screen buttons) and Y opens a menu to choose. Add: Select uses item 2 directly; Y keeps HG's behaviour. No save change. | ⏳ |
 | 31 | Honey trees say the hours until Pokémon gather (2957e59d) | skip: no honey trees in HG | — |
 | 32 | Poké Radar says the chain length (2957e59d) | skip: no Poké Radar in HG | — |
 | 33 | Eggs hatch twice as fast (2957e59d) | port | | 🟡 |
-| 34 | Trade evolutions by level (Kadabra 36, Machoke/Graveler/Haunter 37) and trade items used like evolution stones (2957e59d) | port | Same Pokémon and items exist in HG. | ⏳ |
+| 34 | Trade evolutions by level (Kadabra 36, Machoke/Graveler/Haunter 37) and trade items used like evolution stones (2957e59d) | port | Same Pokémon and items exist in HG (data in `evo.json`, `item_data.csv`). An Everstone now also stops Kadabra's level-up evolution (vanilla's Kadabra exception only made sense for trades; Gunk's Platinum still has that hole). | ✅ |
 | 35 | UNLOCK FPS option (from Following Platinum, 211b80ef) | skip (ask) | Came with the follower port, not a user request; HG's field already runs at its own rate. Say if you want it. | — |
 
 ## Test infrastructure (not in the shipped game)
@@ -106,8 +106,13 @@ bedroom, Mom unlocks Save); no test hooks in the ROM.
 | torn_save (crash at 9 points during a save) | pass | pass: +120f nothing written yet; +170 to +560f one torn block, falls back to the previous save; +760f the new save |
 | backup_recovery (newest save damaged) | pass | pass |
 
-Not yet exercised in the emulator: teaching a TM, vitamins past 100, egg hatching speed, the bar speeds in battle,
-the DS menu banner text.
+Session 2 (build daf0120f1, INSTANT text + trade evolutions): the suite passes 4/4 again; with FAST text as the
+new-game default the save finishes sooner (torn_save: +120 to +420f fall back to the previous save, +560f and
++760f the new save). Checked in the emulator with `mons.py` (party and bag edited in RAM): INSTANT prints Mom's whole
+two-line message within 6 frames; the Metal Coat evolves Onix (Kadabra listed UNABLE); a Rare Candy to 36 evolves
+Kadabra, but not while it holds an Everstone; a Protein takes Attack EVs 100 -> 110; teaching TM06 keeps the TM.
+
+Not yet exercised in the emulator: egg hatching speed, the bar speeds in battle, the DS menu banner text.
 
 ## Plan for the remaining ports
 
