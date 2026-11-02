@@ -1225,6 +1225,7 @@ struct ObjectMovementTaskEnv {
     EventObjectMovementMan *movementMan;
     struct MovementScriptCommand *cmd;
     FieldSystem *fieldSystem;
+    ScriptEnvironment *scriptEnv; // Gunk: the script that started the movement
 };
 
 void _RunObjectEventMovement(SysTask *task, struct ObjectMovementTaskEnv *env);
@@ -1238,18 +1239,26 @@ void _ScheduleObjectEventMovement(FieldSystem *fieldSystem, EventObjectMovementM
     env->fieldSystem = fieldSystem;
     env->movementMan = movementMan;
     env->cmd = a2;
+    // Gunk: found now; by the time the movement ends another field task can be current, and its memory isn't a
+    // script's movement counter (Gunk's Platinum c026a1c9: a follower hop still running when a script started a
+    // screen effect left the count above zero and the next WaitMovement waited forever)
+    env->scriptEnv = TaskManager_GetEnvironment(fieldSystem->taskman);
     env->task = SysTask_CreateOnMainQueue((SysTaskFunc)_RunObjectEventMovement, env, 0);
 }
 
 void _RunObjectEventMovement(SysTask *task, struct ObjectMovementTaskEnv *env) {
-    u8 *movementCnt = FieldSysGetAttrAddr(env->fieldSystem, SCRIPTENV_ACTIVE_MOVEMENT_COUNTER);
     if (EventObjectMovementMan_IsFinish(env->movementMan) == TRUE) {
+        ScriptEnvironment *scriptEnv = env->scriptEnv;
         EventObjectMovementMan_Delete(env->movementMan);
         SysTask_Destroy(env->task);
         if (env->cmd != NULL) {
             Heap_Free(env->cmd);
         }
         Heap_Free(env);
+        if (scriptEnv == NULL || scriptEnv->check != Unk80_10_C_MAGIC) {
+            return; // the script has ended meanwhile
+        }
+        u8 *movementCnt = FieldSysGetAttrAddrInternal(scriptEnv, SCRIPTENV_ACTIVE_MOVEMENT_COUNTER);
         if (*movementCnt == 0) {
             GF_ASSERT(FALSE);
         } else {
