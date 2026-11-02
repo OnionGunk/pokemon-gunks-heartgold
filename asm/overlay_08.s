@@ -13622,7 +13622,7 @@ _02222D26:
 	bne _02222D66
 	add r0, r4, #0
 	bl PCStorage_FindFirstBoxWithEmptySlot
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: 24 boxes (PC full)
 	bne _02222D66
 	ldr r0, [r5, #0x10]
 	ldr r2, [r5, #0x18]

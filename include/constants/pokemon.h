@@ -9,7 +9,7 @@
 #define MAX_EV_SUM        510
 #define MAX_LEARNED_MOVES 22
 
-#define NUM_BOXES       18
+#define NUM_BOXES       24 // Gunk: vanilla had 18
 #define MONS_PER_BOX    30
 #define BOX_NAME_LENGTH 20
 

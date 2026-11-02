@@ -85,9 +85,9 @@ void HBlankIntrRegsToggle(BOOL enable) {
 
 static const struct HeapParam sDefaultHeapSpec[] = {
     { 0xD200,   OS_ARENA_MAIN },
-    { 0x23600,  OS_ARENA_MAIN },
+    { 0x29600,  OS_ARENA_MAIN }, // Gunk: + 0x6000 for SaveData's six more sectors (24 PC boxes), taken from heap 3
     { 0x10,     OS_ARENA_MAIN },
-    { 0x11D000, OS_ARENA_MAIN },
+    { 0x117000, OS_ARENA_MAIN },
 };
 
 void sub_0201A1B4(void) {

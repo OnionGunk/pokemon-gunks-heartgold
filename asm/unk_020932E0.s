@@ -538,7 +538,7 @@ _0209372C:
 	cmp r4, #0x1e
 	bge _0209378A
 	ldrb r0, [r5, #0xf]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _0209375A
 	cmp r4, #6
 	bge _02093824
@@ -2100,7 +2100,7 @@ _020943E8: .word 0x000007E4
 sub_020943EC: ; 0x020943EC
 	push {r3, lr}
 	ldrb r1, [r0, #0xf]
-	cmp r1, #0x12
+	cmp r1, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _020943FA
 	bl sub_02094528
 	pop {r3, pc}
@@ -3201,7 +3201,7 @@ sub_02094C88: ; 0x02094C88
 	sub sp, #0x10
 	add r6, r1, #0
 	add r5, r0, #0
-	cmp r6, #0x12
+	cmp r6, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _02094CB2
 	ldr r2, _02094D0C ; =0x0000012A
 	ldr r3, [r5, #4]
@@ -4320,7 +4320,7 @@ _02095550:
 	ldr r0, _020955E4 ; =0x000005DC
 	bl PlaySE
 	ldrb r0, [r5, #0xf]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	ldr r0, _020955E8 ; =0x000046B8
 	bne _020955BE
 	ldr r0, [r5, r0]
@@ -4402,7 +4402,7 @@ _02095604:
 	ldr r0, _02095694 ; =0x000005DC
 	bl PlaySE
 	ldrb r0, [r5, #0xf]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	ldr r0, _02095698 ; =0x000046B8
 	bne _0209566E
 	ldr r0, [r5, r0]

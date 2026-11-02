@@ -2909,7 +2909,7 @@ ov70_02238F24: ; 0x02238F24
 	add r0, r1, #2
 	strh r2, [r4, r0]
 	ldrh r0, [r4, r0]
-	cmp r0, #0x13
+	cmp r0, #0x19 ; Gunk: 24 boxes counted (counter 1-24)
 	bne _02238F58
 	mov r2, #0
 	add r0, r1, #2
@@ -11698,7 +11698,7 @@ _0223D6E8:
 	mov r0, #0x12
 	lsl r0, r0, #4
 	ldrh r0, [r5, r0]
-	mov r1, #0x13
+	mov r1, #0x19 ; Gunk: 24 boxes + the party
 	mov r2, #1
 	bl ov70_0223D924
 	mov r1, #0x12
@@ -11721,10 +11721,10 @@ _0223D720:
 	bl Sprite_SetAnimCtrlSeq
 	mov r0, #0x12
 	lsl r0, r0, #4
-	mov r1, #0x13
+	mov r1, #0x19 ; Gunk: 24 boxes + the party
 	add r2, r1, #0
 	ldrh r0, [r5, r0]
-	sub r2, #0x14
+	sub r2, #0x1A ; Gunk: step -1
 	bl ov70_0223D924
 	mov r1, #0x12
 	lsl r1, r1, #4
@@ -11893,7 +11893,7 @@ _0223D864:
 	lsl r0, r0, #4
 	sub r4, #0x64
 	ldrh r0, [r5, r0]
-	mov r1, #0x13
+	mov r1, #0x19 ; Gunk: 24 boxes + the party
 	add r2, r4, #0
 	bl ov70_0223D924
 	mov r1, #0x12
@@ -12644,7 +12644,7 @@ ov70_0223DE6C: ; 0x0223DE6C
 	mov r0, #0x12
 	lsl r0, r0, #4
 	ldrh r0, [r4, r0]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	beq _0223DEC4
 	ldr r0, [r4]
 	ldr r0, [r0, #8]
@@ -13155,7 +13155,7 @@ ov70_0223E264: ; 0x0223E264
 	ldr r0, [sp, #0x10]
 	cmp r0, #0
 	blt _0223E326
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bge _0223E326
 	ldr r6, _0223E470 ; =0x000011F4
 	mov r4, #0
@@ -13397,7 +13397,7 @@ _0223E48C: .word 0x00001204
 
 	thumb_func_start ov70_0223E490
 ov70_0223E490: ; 0x0223E490
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _0223E498
 	mov r0, #1
 	bx lr
@@ -18286,7 +18286,7 @@ ov70_022409C0: ; 0x022409C0
 	add r5, r0, #0
 	lsl r1, r1, #4
 	ldrh r0, [r5, r1]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	beq _02240A1A
 	mov r0, #0x3d
 	bl AllocMonZeroed
@@ -18379,7 +18379,7 @@ ov70_02240A7C: ; 0x02240A7C
 	add r1, r4, #0
 	ldr r0, [r0, #0x20]
 	bl UpdatePokedexWithReceivedSpecies
-	mov r0, #0x12
+	mov r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	str r0, [sp, #0x20]
 	ldr r0, [r5]
 	ldr r0, [r0, #8]
@@ -18445,7 +18445,7 @@ _02240B0E:
 	bl ov70_02240CA0
 _02240B2C:
 	ldr r0, [sp, #0x20]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _02240B54
 	ldr r0, [r5]
 	add r1, r4, #0
@@ -18455,7 +18455,7 @@ _02240B2C:
 	ldr r0, [r0, #8]
 	bl Party_GetCount
 	mov r1, #0x4d
-	mov r2, #0x12
+	mov r2, #0x18 ; Gunk: box 24 = the party (was 18)
 	lsl r1, r1, #2
 	str r2, [r5, r1]
 	sub r2, r0, #1
@@ -18508,7 +18508,7 @@ ov70_02240B9C: ; 0x02240B9C
 	add r4, r1, #0
 	ldr r0, [r0, #0x20]
 	bl UpdatePokedexWithReceivedSpecies
-	mov r0, #0x12
+	mov r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	str r0, [sp, #0x20]
 	ldr r0, [r5]
 	ldr r0, [r0, #8]
@@ -18567,7 +18567,7 @@ _02240C16:
 	mov r2, #0
 	bl SetMonData
 	ldr r0, [sp, #0x20]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _02240C58
 	ldr r0, [r5]
 	add r1, r4, #0
@@ -18577,7 +18577,7 @@ _02240C16:
 	ldr r0, [r0, #8]
 	bl Party_GetCount
 	mov r1, #0x4d
-	mov r2, #0x12
+	mov r2, #0x18 ; Gunk: box 24 = the party (was 18)
 	lsl r1, r1, #2
 	str r2, [r5, r1]
 	sub r2, r0, #1
@@ -20162,7 +20162,7 @@ ov70_022418A4: ; 0x022418A4
 	lsl r2, r2, #2
 	add r4, r0, #0
 	ldr r0, [r5, r2]
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _022418D4
 	ldr r0, [r5]
 	add r1, r2, #4

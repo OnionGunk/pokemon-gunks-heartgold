@@ -18653,7 +18653,7 @@ _021EEF86:
 	bl ov112_021EF15C
 	mov r0, #0x9a
 	mov r1, #1
-	mov r2, #0x12
+	mov r2, #0x18 ; Gunk: 24 boxes
 	bl sub_020932E0
 	add r1, r6, #4
 	str r0, [r5, r1]
@@ -19113,7 +19113,7 @@ ov112_021EF31C: ; 0x021EF31C
 	bne _021EF3EA
 	ldr r6, [r5, #0xc]
 	ldr r0, [r4, #0x20]
-	cmp r6, #0x12
+	cmp r6, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _021EF38C
 	bl SaveArray_Party_Get
 	ldr r1, [r5, #0x10]
@@ -19225,7 +19225,7 @@ _021EF414:
 	mov r1, #2
 	add r0, sp, #0x34
 	strb r1, [r0, #9]
-	cmp r5, #0x12
+	cmp r5, #0x18 ; Gunk: box 24 = the party (was 18)
 	ldr r0, [r2, #0x20]
 	bne _021EF4D6
 	bl SaveArray_Party_Get

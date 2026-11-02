@@ -48,7 +48,7 @@
 #define SAVE_PCSTORAGE                     42
 #define SAVE_BLOCK_NUM                     43
 
-#define SAVE_PAGE_MAX    35
+#define SAVE_PAGE_MAX    41 // Gunk: 24 PC boxes need 25 sectors (vanilla 35: 16 + 19)
 #define SAVE_SECTOR_SIZE 0x1000
 
 #endif // POKEHEARTGOLD_CONSTANTS_SAVE_ARRAYS_H

@@ -5674,7 +5674,7 @@ BOOL BtlCmd_CheckSafariGameDone(BattleSystem *battleSystem, BattleContext *ctx) 
 
     int adrs = BattleScriptReadWord(ctx);
 
-    if (!(BattleSystem_GetPartySize(battleSystem, 0) != 6 || PCStorage_FindFirstBoxWithEmptySlot(battleSystem->storage) != 18)) {
+    if (!(BattleSystem_GetPartySize(battleSystem, 0) != 6 || PCStorage_FindFirstBoxWithEmptySlot(battleSystem->storage) != NUM_BOXES)) {
         BattleScriptIncrementPointer(ctx, adrs);
     }
 

@@ -197,7 +197,7 @@ ov97_0221E700: ; 0x0221E700
 	bl ov97_0221E7F4
 	mov r0, #0x5c
 	mov r1, #3
-	mov r2, #0x13
+	mov r2, #0x19 ; Gunk: 24 boxes + the party
 	bl sub_020932E0
 	str r0, [r4, #8]
 	mov r0, #0x5c
@@ -225,7 +225,7 @@ _0221E76A:
 	str r0, [sp]
 	str r0, [sp, #4]
 	str r6, [sp, #8]
-	mov r0, #0x12
+	mov r0, #0x18 ; Gunk: start on the party (box 24)
 	str r0, [sp, #0xc]
 	ldr r0, _0221E7E4 ; =ov97_0221E91C
 	add r2, r7, #0
@@ -515,7 +515,7 @@ ov97_0221E98C: ; 0x0221E98C
 _0221E9B4:
 	ldr r6, [r5, #0x10]
 	ldr r0, [r7]
-	cmp r6, #0x12
+	cmp r6, #0x18 ; Gunk: box 24 = the party (was 18)
 	bne _0221EA20
 	ldr r0, [r0]
 	bl SaveArray_Party_Get
@@ -835,7 +835,7 @@ _0221EC3C:
 	mov r1, #2
 	add r0, sp, #0x70
 	strb r1, [r0, #9]
-	cmp r6, #0x12
+	cmp r6, #0x18 ; Gunk: box 24 = the party (was 18)
 	ldr r0, [r5, #0x2c]
 	bne _0221ED1C
 	bl SaveArray_Party_Get

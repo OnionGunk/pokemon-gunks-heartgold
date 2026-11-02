@@ -11503,7 +11503,7 @@ _021EB0C8: .word 0x04000050
 _021EB0CC: .word 0x04001050
 _021EB0D0: .word 0x04000304
 _021EB0D4: .word 0xFFFF7FFF
-_021EB0D8: .word 0x000088E0
+_021EB0D8: .word 0x0000E8E0 ; Gunk: 0x88E0 + 24 box thumbnails of 0x400
 _021EB0DC: .word 0x00000454
 _021EB0E0: .word ov14_021E59AC
 	thumb_func_end ov14_021EAFAC
@@ -21413,7 +21413,7 @@ ov14_021F028C: ; 0x021F028C
 	add r4, r1, #0
 	cmp r0, #0
 	bne _021F029C
-	mov r0, #0x11
+	mov r0, #0x17 ; Gunk: 24 boxes
 	b _021F029E
 _021F029C:
 	sub r0, r0, #1
@@ -21476,7 +21476,7 @@ ov14_021F0314: ; 0x021F0314
 	add r5, r0, #0
 	ldrb r0, [r5, #0x1f]
 	add r4, r1, #0
-	cmp r0, #0x11
+	cmp r0, #0x17 ; Gunk: 24 boxes
 	bne _021F0324
 	mov r0, #0
 	b _021F0326
@@ -23056,12 +23056,12 @@ ov14_021F1004: ; 0x021F1004
 	mul r0, r4
 	add r1, r1, r0
 	bpl _021F101A
-	add r1, #0x12
+	add r1, #0x18 ; Gunk: 24 boxes
 	b _021F1020
 _021F101A:
-	cmp r1, #0x12
+	cmp r1, #0x18 ; Gunk: 24 boxes
 	blt _021F1020
-	sub r1, #0x12
+	sub r1, #0x18 ; Gunk: 24 boxes
 _021F1020:
 	add r0, r5, #0
 	add r0, #0x25
@@ -30385,7 +30385,7 @@ ov14_021F4958: ; 0x021F4958
 	add sp, #8
 	pop {r3, r4, r5, r6, r7, pc}
 	nop
-_021F49C4: .word 0x000040C8
+_021F49C4: .word 0x000088E0 ; Gunk: box thumbnails (0x400 each) moved past the old struct end
 	thumb_func_end ov14_021F4958
 
 	thumb_func_start ov14_021F49C8
@@ -30398,7 +30398,7 @@ _021F49CE:
 	add r1, r4, #0
 	bl ov14_021F4958
 	add r4, r4, #1
-	cmp r4, #0x12
+	cmp r4, #0x18 ; Gunk: 24 boxes
 	blo _021F49CE
 	pop {r3, r4, r5, pc}
 	.balign 4, 0
@@ -30435,7 +30435,7 @@ _021F49F8:
 	blo _021F49F8
 	pop {r3, r4, r5, r6, r7, pc}
 	nop
-_021F4A1C: .word 0x000040C8
+_021F4A1C: .word 0x000088E0 ; Gunk: box thumbnails (0x400 each) moved past the old struct end
 	thumb_func_end ov14_021F49E0
 
 	thumb_func_start ov14_021F4A20
@@ -30469,7 +30469,7 @@ ov14_021F4A20: ; 0x021F4A20
 _021F4A5C:
 	pop {r4, r5, r6, pc}
 	nop
-_021F4A60: .word 0x000040C8
+_021F4A60: .word 0x000088E0 ; Gunk: box thumbnails (0x400 each) moved past the old struct end
 	thumb_func_end ov14_021F4A20
 
 	thumb_func_start ov14_021F4A64
@@ -35023,7 +35023,7 @@ _021F6D64:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: 24 boxes
 	blt _021F6D7C
 	mov r1, #0
 	b _021F6D84
@@ -35066,7 +35066,7 @@ _021F6DC0:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F6DD6
-	mov r1, #0x11
+	mov r1, #0x17 ; Gunk: 24 boxes
 	b _021F6DDE
 _021F6DD6:
 	add r0, r5, #0
@@ -35629,7 +35629,7 @@ _021F71FC:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: 24 boxes
 	blt _021F7214
 	mov r1, #0
 	b _021F721C
@@ -35672,7 +35672,7 @@ _021F7258:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F726E
-	mov r1, #0x11
+	mov r1, #0x17 ; Gunk: 24 boxes
 	b _021F7276
 _021F726E:
 	add r0, r5, #0
@@ -36325,7 +36325,7 @@ _021F7750:
 	add r0, #0x25
 	ldrb r0, [r0]
 	add r0, r0, #1
-	cmp r0, #0x12
+	cmp r0, #0x18 ; Gunk: 24 boxes
 	blt _021F7768
 	mov r1, #0
 	b _021F7770
@@ -36368,7 +36368,7 @@ _021F77AC:
 	ldrb r0, [r0]
 	sub r0, r0, #1
 	bpl _021F77C2
-	mov r1, #0x11
+	mov r1, #0x17 ; Gunk: 24 boxes
 	b _021F77CA
 _021F77C2:
 	add r0, r5, #0

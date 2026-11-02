@@ -42,8 +42,9 @@ void PCStorage_InitializeBoxes(PCStorage *storage) {
 
     msgData = NewMsgDataFromNarc(MSGDATA_LOAD_LAZY, NARC_msgdata_msg, msg_0024, HEAP_ID_DEFAULT);
     if (msgData != NULL) {
+        // Gunk: "BOX 1"-"BOX 18" are ids 6-23; the names of the added boxes are appended at the end of the file
         for (i = 0; i < NUM_BOXES; i++) {
-            ReadMsgDataIntoU16Array(msgData, i + msg_0024_00006, storage->box_names[i]);
+            ReadMsgDataIntoU16Array(msgData, i < 18 ? i + msg_0024_00006 : i - 18 + msg_0024_00094, storage->box_names[i]);
         }
         DestroyMsgData(msgData);
     }
