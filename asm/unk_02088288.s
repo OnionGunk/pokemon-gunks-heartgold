@@ -1087,6 +1087,21 @@ _02088B96:
 	mov r0, #0x13
 	pop {r4, r5, r6, pc}
 _02088BA6:
+	; Gunk: Select on the Skills page (page 1) cycles stats / IVs / EVs
+	ldr r1, [r3, #0x48]
+	mov r0, #4
+	tst r0, r1
+	beq _02088BA6_gunk
+	ldr r0, _02088D10 ; =0x000007BC
+	ldrsb r0, [r5, r0]
+	cmp r0, #1
+	bne _02088BA6_gunk
+	add r0, r5, #0
+	bl GunkSummary_CycleSkillsDisplay
+	mov r0, #2
+	pop {r4, r5, r6, pc}
+	nop
+_02088BA6_gunk:
 	ldr r1, [r3, #0x48]
 	mov r0, #2
 	tst r0, r1

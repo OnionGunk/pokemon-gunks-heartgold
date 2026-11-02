@@ -1075,7 +1075,7 @@ _0208CC48:
 	pop {r4, pc}
 _0208CC58:
 	add r0, r4, #0
-	bl sub_0208D178
+	bl GunkSummary_DrawSkills ; Gunk: Select shows IVs / EVs
 	add r0, r4, #0
 	bl sub_0208D474
 	add sp, #0x10

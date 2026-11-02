@@ -927,6 +927,20 @@
     {
       "id": "msg_0302_00194",
       "en_US": "{ALN_CENTER}Switch"
+    },
+    {
+      "id": "msg_0302_00195",
+      "en_US": [
+        "Individual values.\n",
+        "SELECT: show EVs."
+      ]
+    },
+    {
+      "id": "msg_0302_00196",
+      "en_US": [
+        "Effort values.\n",
+        "SELECT: show stats."
+      ]
     }
   ]
 }

@@ -300,6 +300,7 @@ Static main
     Object asm/unk_0208B1AC.s
     Object asm/unk_0208C3E4.s
     Object asm/unk_0208DE40.s
+    Object src/gunk_summary.c
     Object src/ribbon.c
     Object src/trainer_memo.c
     Object asm/unk_0208F658.s
