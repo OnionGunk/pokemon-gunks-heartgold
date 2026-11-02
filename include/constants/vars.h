@@ -381,6 +381,9 @@
 #define VAR_UNK_416E                       0x416E
 #define VAR_UNK_416F                       0x416F
 
+// Gunk: the end of the var array is unused by the game
+#define VAR_GUNK_LAST_REPEL VAR_UNK_416E // the Repel last used from the bag, offered again when it wears off
+
 #define NUM_VARS (0x170)
 
 #define SPECIAL_VAR_BASE 0x8000

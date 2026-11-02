@@ -1309,8 +1309,31 @@ scr_seq_0003_021:
 scr_seq_0003_022:
 	PlaySE SEQ_SE_DP_SELECT
 	LockAll
+	// Gunk: offer another Repel of the kind last used
+	HasItem VAR_GUNK_LAST_REPEL, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfNe _GunkRepelAgain
 	NPCMsg msg_0040_00065
 	WaitABPress
+	CloseMsg
+	ReleaseAll
+	End
+
+_GunkRepelAgain:
+	BufferItemName 0, VAR_GUNK_LAST_REPEL
+	NPCMsg msg_0040_00127
+	TouchscreenMenuHide
+	GetMenuChoice VAR_SPECIAL_RESULT
+	TouchscreenMenuShow
+	Compare VAR_SPECIAL_RESULT, 0
+	GoToIfNe _GunkRepelEnd
+	GunkUseRepel VAR_GUNK_LAST_REPEL
+	PlaySE SEQ_SE_DP_CARD2
+	BufferPlayersName 0
+	BufferItemName 1, VAR_GUNK_LAST_REPEL
+	NPCMsg msg_0040_00128
+	WaitABPress
+_GunkRepelEnd:
 	CloseMsg
 	ReleaseAll
 	End

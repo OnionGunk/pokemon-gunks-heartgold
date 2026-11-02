@@ -2,6 +2,8 @@
 
 #include "bag.h"
 #include "field_system.h"
+#include "item.h"
+#include "roamer.h"
 #include "scrcmd.h"
 
 extern BOOL ItemIsTMOrHM(u16 item_id);
@@ -80,5 +82,16 @@ BOOL ScrCmd_GetItemPocket(ScriptContext *ctx) {
 
     *ret_ptr = GetItemAttr(item_id, ITEMATTR_FIELD_POCKET, HEAP_ID_FIELD2);
 
+    return FALSE;
+}
+
+// Gunk: uses one Repel of the given kind from the bag (the prompt when a Repel wears off)
+BOOL ScrCmd_GunkUseRepel(ScriptContext *ctx) {
+    u16 item = ScriptGetVar(ctx);
+    SaveData *saveData = ctx->fieldSystem->saveData;
+
+    if (Bag_TakeItem(Save_Bag_Get(saveData), item, 1, HEAP_ID_FIELD2)) {
+        *RoamerSave_GetRepelAddr(Save_Roamers_Get(saveData)) = GetItemAttr(item, ITEMATTR_HOLD_EFFECT_PARAM, HEAP_ID_FIELD2);
+    }
     return FALSE;
 }

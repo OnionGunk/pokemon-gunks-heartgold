@@ -7,6 +7,8 @@
 #include "files/msgdata/msg.naix"
 #include "msgdata/msg/msg_0010.h"
 
+#include "constants/vars.h"
+
 #include "bag.h"
 #include "bag_types_def.h"
 #include "bag_view.h"
@@ -24,6 +26,7 @@
 #include "render_text.h"
 #include "render_window.h"
 #include "roamer.h"
+#include "save_vars_flags.h"
 #include "screen_fade.h"
 #include "sound_02004A44.h"
 #include "sprite_system.h"
@@ -1968,6 +1971,8 @@ static String *BagApp_TryUseRepel(BagAppData *appData, u16 itemId) {
         return NewString_ReadMsgData(appData->msgData, msg_0010_00063);
     }
     BagApp_SetRepelStepCount(appData, GetItemAttr(itemId, ITEMATTR_HOLD_EFFECT_PARAM, HEAP_ID_BAG));
+    // Gunk: offered again when it wears off
+    *Save_VarsFlags_GetVarAddr(Save_VarsFlags_Get(appData->bagView->saveData), VAR_GUNK_LAST_REPEL) = itemId;
     appData->quantity = 1;
     PlaySE(SEQ_SE_DP_CARD2);
     return NewString_ReadMsgData(appData->msgData, msg_0010_00062);

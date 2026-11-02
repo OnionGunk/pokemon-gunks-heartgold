@@ -799,6 +799,14 @@
     {
       "id": "msg_0040_00126",
       "en_US": ["Your Pokémon has forgotten the move\n", "{STRVAR_1 6, 0, 0} completely."]
+    },
+    {
+      "id": "msg_0040_00127",
+      "en_US": ["Repel’s effect wore off...\r", "Use another {STRVAR_1 8, 0, 0}? {YESNO 0}"]
+    },
+    {
+      "id": "msg_0040_00128",
+      "en_US": ["{STRVAR_1 3, 0, 0} used the\n", "{STRVAR_1 8, 1, 0}."]
     }
   ]
 }

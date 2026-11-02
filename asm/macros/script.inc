@@ -4782,6 +4782,12 @@
 	.byte \arg1
 	.endm
 
+	// Gunk
+	.macro GunkUseRepel item
+	.short 853
+	.short \item
+	.endm
+
 	// Script headers
 
 	.macro MapScript kind, script
