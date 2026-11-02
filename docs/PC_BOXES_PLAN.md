@@ -3,7 +3,10 @@
 Gunk's Platinum has 21 boxes. This is the map of every place in HeartGold that assumes 18, made on 2026-11-02
 (not yet changed). Each box is `PC_BOX`: 30 `BoxPokemon` + 16 bytes = 0x1000 bytes.
 
-## Open question: 21 or 24 boxes?
+**Done (24 boxes), 2026-11-03.** Everything below was changed; the overlay 14 work buffer kept its field offsets
+by moving the box thumbnails past its old end (0x88E0) instead of shifting the fields.
+
+## The question that was open: 21 or 24 boxes?
 
 The PC's "jump to box" list shows 6 boxes per page (about 40 divide-by-6 sites in overlay 14). 21 boxes leave
 the fourth page half empty: columns 3-5 would point at boxes 21-23, so they need clamping and greying out. 24 boxes

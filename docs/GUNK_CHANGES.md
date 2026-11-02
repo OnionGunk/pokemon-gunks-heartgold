@@ -19,13 +19,13 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 |---|---|---|---|---|
 | 1 | Name: "Pokémon Gunk's Platinum Version" in the DS menu banner and end credits (8fa30cda) | port | Banner "Pokémon Gunk's" / "HeartGold Version"; staff credits title "Pokémon Gunk’s HeartGold Version". | 🟡 |
 | 2 | ROM header title `GUNK PL` (3f119584); game code kept as CPUE so emulators pick the right save type | port | Header title `GUNK HG` (checked in the ROM), game code stays `IPKE`. | ✅ |
-| 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | New HeartGold title logo art; needs the HG title screen's graphics format. HG's logo is `files/demo/title/titledemo/titledemo_00000003.png` (256x120, 8bpp, own palette). "GUNK'S" needs a U and a K, which the HeartGold logo doesn't contain: **question for the user** (new lettering, or their own art). | ⏳ |
+| 3 | Title-screen logo "Gunk's Platinum Version" (24f96c51) | adapt | The user's art, scaled to 189x118 in the 256x120 logo layer, 127 colours (palette entries 0-127; 128-255 belong to the sunburst behind it). Converter: `C:\Projects\gunk-hg-art\convert_logo.py`. Checked on the title screen. | ✅ |
 
 ## Save and storage
 
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 4 | 21 PC boxes, up from 18: a living dex through Gen 4 plus 3 spare (7713e967) | port | `NUM_BOXES` 18 → 21. HG's `PCStorage` keeps names and wallpapers after the boxes, and HG tracks modified boxes in a 32-bit mask (21 fits). The box block grows ~3 sectors; HG's main save uses 35 of 64 sectors per flash half with the extra saves (Hall of Fame, Battle Frontier videos) addressed as `SAVE_PAGE_MAX + n`, so `SAVE_PAGE_MAX` has to grow and the extras shift with it. Box names 19-21 appended to the box-name text bank (msg_0024). **Risk:** HG's PC app (overlay 14, `asm/overlay_14.s`) is still undecompiled assembly with ~95 candidate literal 18s and per-box arrays in its working memory (Platinum's had `[18][1024]` icon buffers); every one must be found and the working-memory size grown, or boxes 19-21 overrun memory. Done after the first batch, with a full-box test. | ⏳ |
+| 4 | 21 PC boxes, up from 18: a living dex through Gen 4 plus 3 spare (7713e967) | adapt | **24 boxes** (the user chose as many as reasonable; 24 fills the PC's 6-per-page box list). `NUM_BOXES` 24, `SAVE_PAGE_MAX` 41, SaveData's heap +0x6000, the PC app's box wraps and thumbnail buffer, the battle PC-full check, and the GTS / Pokéathlon / Pokéwalker pickers (18 meant the party). See PC_BOXES_PLAN.md. Checked: boxes 19-24 in the PC, the 4-page box list, 720 Pokémon saved and reloaded, save tests. GTS and Pokéwalker can't run in an emulator. | ✅ |
 | 5 | Save table grown for DexNav: per-species search levels stored after the PC boxes in the boxes block (5985a222) | port | New save array appended after `SAVE_PCSTORAGE` (keeps every retail array ID). | ⏳ |
 | 6 | Static check that the main save plus extra saves fit in one flash half | port | Same compile-time assert for HG's `SAVE_PAGE_MAX + last extra chunk`. | ⏳ |
 
@@ -171,8 +171,7 @@ before the next.
    (536) in `items.h` and `item_data.csv` (+ names, descriptions, icons); new script commands appended to
    `gScriptCmdTable`; Mom in New Bark gives them with the Running Shoes. Exp. All needs the battle EXP code
    (src/battle) to give half EXP and EVs to party members that didn't battle.
-7. **21 PC boxes (#4).** Every 18-box dependency is mapped in [PC_BOXES_PLAN.md](PC_BOXES_PLAN.md), with the open
-   question of 21 vs 24 boxes (the box list shows 6 per page).
+7. **PC boxes (#4):** done, 24 boxes.
 8. **DexNav (#7-#10).** Key item with a touch-screen species grid (caught / seen silhouette / unseen "?"), search,
    chains and levels; legal Method K rolls; levels saved in a new save array appended after `SAVE_PCSTORAGE` (box
    block, after #7 settles that block's size); gift from Lyra/Ethan after the Route 29 catching tutorial.

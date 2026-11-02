@@ -31,7 +31,8 @@ Done:
   and it hides in a rustling patch of grass nearby. Searching the same Pokémon raises its search level and chain,
   which bring better IVs and more shiny chances. The Pokémon are rolled exactly as wild ones, so they stay legal.
 
-Planned: more PC boxes and the title logo.
+- **24 PC boxes** (18 in the original game): room for 720 Pokémon.
+- **Title screen:** the Pokémon Gunk's HeartGold Version logo.
 
 Pokémon following you and auto-run (the Running Shoes button) come with HeartGold already.
 
