@@ -54,7 +54,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
 | 17 | INSTANT text speed in Options; new games start on FAST; Options row fits (c0644cff, 9c1ccbc6) | port | HG's `Options.textSpeed` is a 4-bit field, so a fourth value fits. The row keeps its three drawn buttons as a sliding window: SLOW/MID show SLOW MID FAST, FAST/INSTANT show MID FAST INSTANT. Fixed in passing: Platinum's version leaves the last frame's characters uncopied when a message ends without a button wait. | ✅ |
-| 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. Built in; not yet measured in a battle (the bar test only settled the HP bar). | 🟡 |
+| 18 | EXP bar fills twice as fast (c0644cff) | port | Two pixels per frame in the same sub-pixel code as #19. Checked (bars_check.py, a Lv. 5 Kadabra beating a Rattata): the EXP bar fills at 0.97 px/frame against vanilla's 0.50. | ✅ |
 | 19 | Battle HP bars move one pixel per frame whatever the max HP (566793ec) | port | pokeheartgold already has a `FAST_HP_BARS` switch (sub-pixel steps, 1 px per bar update); turned on. Checked: 48 px in 94 frames, one pixel per update (the bars update at 30 Hz, as in vanilla). | ✅ |
 | 20 | Run by default with the Running Shoes, hold B to walk (c0644cff) | skip: HeartGold has it | The Running Shoes button on the touch-screen menu toggles always-run. | — |
 | 21 | Repel prompt: when a Repel wears off and another of the same kind is in the bag, offer to use it (c0644cff) | port | Script command 853 `GunkUseRepel` appended; the kind last used is kept in `VAR_GUNK_LAST_REPEL` (`VAR_UNK_416E`, in the unused end of the var array: no save change). Checked: a Super Repel used from the bag, counter set to 1, one step: "Use another Super Repel?" YES used one (200 steps, one fewer in the bag). | ✅ |
@@ -78,7 +78,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
 | 36 | `gHeapAllocFails` counter for the emulator suite (9c1ccbc6) | port | | ✅ |
-| 37 | Test builds: `gTestSaveMode` start points, warp anywhere, follower off (01b7f2a7, 211b80ef, 18ed578b, acfccac7) | adapt | HG test build: start in New Bark / post-game save; warp anywhere. | ⏳ |
+| 37 | Test builds: `gTestSaveMode` start points, warp anywhere, follower off (01b7f2a7, 211b80ef, 18ed578b, acfccac7) | adapt | Done in the test harness instead of the ROM, so the release build carries no test code. hg-tools `milestones.py` starts a run at any point of the story and walks in through the door, so NPCs and entry scripts load. Milestones: Morty, Jasmine, Pryce, boarding the S.S. Aqua, the cabin, stepping off in Kanto, and Lance through the Hall of Fame, the credits and waking up at home. Each is compared flag for flag with vanilla and saved and reloaded: 7/7 pass. No follower to switch off in HG. | ✅ |
 | 38 | BizHawk harness and suite (`pokemon-platinum-dexnav/emu`) | adapt | Copy to `C:\Projects\hg-tools\emu`, point at HG ROMs and HG linker-map symbols, HG save layout in the checksum validator. | ✅ |
 
 ## Script commands and common scripts
