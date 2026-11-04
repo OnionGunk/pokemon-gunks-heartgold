@@ -39,6 +39,7 @@
 #include "unk_0206D494.h"
 #include "unk_02087E70.h"
 #include "unk_02092BE8.h"
+#include "gunk_dexnav.h"
 #include "use_item_on_mon.h"
 
 static BOOL Task_StartBattle(TaskManager *taskManager);
@@ -369,6 +370,12 @@ static BOOL Task_WildEncounter(TaskManager *taskManager) {
         sub_02050724(encounter->setup, fieldSystem);
         sub_02093070(fieldSystem);
         sub_020930C4(fieldSystem);
+
+        // Gunk: running from a DexNav battle breaks the chain
+        if (gGunkDexNav.inBattle && encounter->setup->winFlag == BATTLE_OUTCOME_PLAYER_FLED) {
+            gGunkDexNav.chain = 0;
+        }
+        gGunkDexNav.inBattle = FALSE;
 
         if (IsBattleResultWin(encounter->setup->winFlag) == FALSE) {
             WildEncounter_Delete(encounter);

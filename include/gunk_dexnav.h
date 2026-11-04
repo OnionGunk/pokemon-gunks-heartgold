@@ -36,6 +36,7 @@ typedef struct GunkDexNavState {
     u32 chainMapId;
     u16 frames;       // since the patch last shook
     u16 searchFrames; // since the search started, in the field (it ends at DEXNAV_SEARCH_FRAMES)
+    BOOL inBattle;    // the wild battle running is the DexNav's (running from it breaks the chain: encounter.c)
 } GunkDexNavState;
 
 extern GunkDexNavState gGunkDexNav;

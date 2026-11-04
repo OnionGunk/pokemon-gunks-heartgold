@@ -1797,5 +1797,6 @@ static BOOL GunkDexNav_TryEncounter(FieldSystem *fieldSystem, EncounterGenState 
     s->chainSpecies = s->species;
     s->chainMapId = s->mapId;
     s->active = FALSE;
+    s->inBattle = TRUE;
     return TRUE;
 }
