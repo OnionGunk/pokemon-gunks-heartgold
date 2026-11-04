@@ -33,8 +33,8 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 
 | # | Change | Verdict | HeartGold plan | Status |
 |---|---|---|---|---|
-| 7 | DexNav key item: Land/Water species menu, R searches for the selected species, chaining, search levels, top-screen search bar (5985a222) | adapt | **Key item DexNav (539)**, registerable (Y). Its menu lists the current area's grass Pokémon for the time of day, swarm and radio (● caught, ○ seen, ????? unseen; up to 7). Picking one hides it in tall grass 2-4 tiles away (the patch rustles every 24 frames); stepping in starts the battle. **R** searches again for the last pick. Instead of Platinum's persistent search bar, a message gives level, search level, chain and perfect IVs (no HUD window, so nothing to tear down when the field unloads; the Platinum fix d87b19258 is about that window). The search state lives in the main binary, so chains survive battles and menus; leaving the map or walking 8 tiles away ends it. Only on the normal overworld (not Safari Zone or Bug-Catching Contest). Checked: menu, search message, rustle, battle on stepping in, search level and chain 1 after one encounter. | ✅ |
-| 8 | Legal encounters: one Method J RNG sequence (941125b5) | adapt | Method K exactly as HG's wild encounters roll it (slot % 100, level roll, nature % 25, PID until nature, IVs); best of 1 + level/2 + 2×chain rolls, 1 + level/10 + chain/5 shiny rolls (as Platinum). Legality of a caught one not yet checked in an external checker. | ✅ |
+| 7 | DexNav key item: Land/Water species menu, R searches for the selected species, chaining, search levels, top-screen search bar (5985a222) | adapt | **Key item DexNav (539)**, registerable (Y). Its menu lists the current area's grass Pokémon for the time of day, swarm and radio (● caught, ○ seen, ????? unseen; up to 7). Picking one hides it in tall grass 2-4 tiles away (the patch shakes twice a second; after 10 seconds in the field the Pokémon "got away" and the chain resets); stepping in starts the battle. **R** searches again for the last pick. Instead of Platinum's persistent search bar, a message gives level, search level, chain and perfect IVs (no HUD window, so nothing to tear down when the field unloads; the Platinum fix d87b19258 is about that window). The search state lives in the main binary, so chains survive battles and menus; leaving the map or walking 8 tiles away ends it. Only on the normal overworld (not Safari Zone or Bug-Catching Contest). Checked: menu, search message, rustle, battle on stepping in, search level and chain 1 after one encounter. | ✅ |
+| 8 | Legal encounters: one Method J RNG sequence (941125b5) | adapt | Method K exactly as HG's wild encounters roll it (slot % 100, nature % 25, PID until the nature matches, IVs); the level is the slot's (HG's grass slots have one level). Best of 1 + level/2 + 2×chain rolls; shiny chance as Platinum. Built cheaply so R never stalls: division-free mods, only the winner's frame built, and a shiny found by searching backwards from shiny PID pairs (same RNG sequence). Worst case at search level 255 / chain 999 on a 1% slot: 24 frames from R to the patch (was over 400). **PKHeX: 30/30 legal** (6 each: wild, DexNav, level 255, chain 999, shiny); an independent Method K check finds the grass frame for every DexNav catch. | ✅ |
 | 9 | DexNav Pokétch app: area species, caught in color / seen as silhouette / unseen as "?", tap to target (b5551c4f, 7890b973) | adapt | Plan (b): the key item's own menu (a field list, not a Pokétch grid; no silhouettes). Search levels are saved per species in a new 1 KB save chunk `SAVE_GUNK` (normal block, still 16 sectors; PCStorage moved to id 42; old saves don't load). | ✅ |
 | 10 | DexNav gift from Dawn after the Route 202 catching tutorial (b5551c4f) | adapt | Given by the Guide Gent in Cherrygrove with the Running Shoes (with the Endless Repel and Exp. All); checked by story_sweep. | ✅ |
 
@@ -71,6 +71,7 @@ Status: ✅ done and tested in the emulator, 🟡 built and passes the save suit
 | 32 | Poké Radar says the chain length (2957e59d) | skip: no Poké Radar in HG | — |
 | 33 | Eggs hatch twice as fast (2957e59d) | port | Egg cycles count down by 2 instead of 1. Checked: an egg's cycles went 10 → 8 where vanilla goes 10 → 9 (egg_check.py). | ✅ |
 | 34 | Trade evolutions by level (Kadabra 36, Machoke/Graveler/Haunter 37) and trade items used like evolution stones (2957e59d) | port | Same Pokémon and items exist in HG (data in `evo.json`, `item_data.csv`). An Everstone now also stops Kadabra's level-up evolution (vanilla's Kadabra exception only made sense for trades; Gunk's Platinum still has that hole). | ✅ |
+| 39 | Quick Run and Quick Ball (new for HG) | new | In a wild battle's command menu **R** runs and **L** throws the last ball thrown, shown in a small widget with its count. The last ball is a u16 in `SAVE_GUNK`'s reserved bytes (0 before any), so **older Gunk saves carry over**. No widget with no balls (R still runs); L and R do nothing in trainer battles. Checked by quick_ball.py, including after a save and power cycle. | ✅ |
 | 35 | UNLOCK FPS option (from Following Platinum, 211b80ef) | skip (ask) | Came with the follower port, not a user request; HG's field already runs at its own rate. Say if you want it. | — |
 
 ## Test infrastructure (not in the shipped game)
@@ -127,7 +128,7 @@ More save tests (`suite.py --rom gunk saves`), ported from Gunk's Platinum suite
 
 | Test | Result |
 |---|---|
-| full_boxes: all 540 slots filled, save, power cycle | pass: boxes identical on the cart and after reloading |
+| full_boxes: all 720 slots (24 boxes) filled, save, power cycle | pass: boxes identical on the cart and after reloading |
 | backup_recovery_older: the backup half damaged | pass: the newest save loads (status 1, as vanilla), the next save repairs both halves |
 | torn_save_fine: crash every 30 frames through a save, 24 points | pass: +110 to +500f the previous save, +530f on the new one; always loadable |
 | new_game: the real intro, save, power cycle | pass: continued where saved |
@@ -145,6 +146,20 @@ unlike Platinum they don't move; the Hall of Fame test covers them.
 
 Found and fixed: the DexNav patch didn't trigger during the encounter-free steps right after a script (the R
 search itself), so a patch two steps away could be walked over.
+
+## DexNav, Quick Ball and gate tests (2026-11-03)
+
+| Test | Result |
+|---|---|
+| dexnav_legality.py: 6 catches per kind, each from a different RNG seed, checked by PKHeX (`hg-tools/legality`) | 30 valid, 0 illegal; 6 different PIDs per kind; shinies via repeated level 255 / chain 999 searches |
+| dexnav_timing.py: 150 searches at level 255, chain 999 | 15% slot: 5-6 frames R to patch (shiny up to 10); 1% slot: 8-9 (shiny up to 24) |
+| dexnav_rules.py | the patch shakes every 30 emulator frames; still searching at 9 s, "got away" by 11 s with the chain 0; a wild Rattata kept a Rattata chain of 5, a Hoothoot reset it |
+| quick_ball.py | widget, L throws the last ball, R runs, kept across a save and power cycle; none in trainer battles |
+| cherrygrove_gate.py: every row z 388-410 walking west from Route 29 | only z 398-400 get past the tour's column, and they start the tour, which gives the DexNav: nobody reaches Violet's gym without it |
+
+The field runs at 30 frames a second (HG's main loop draws every other vblank), so field timers count half the
+emulator's frames. The save layout is unchanged apart from the Quick Ball field in reserved bytes: Gunk saves from
+earlier builds load.
 
 ## Plan for the remaining ports
 
