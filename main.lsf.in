@@ -604,6 +604,7 @@ Overlay OVY_12
     Object src/battle/battle_hp_bar.c
     Object asm/overlay_12_02265E28.s
     Object src/battle/battle_input.c
+    Object src/battle/gunk_quick_ball.c
     Object src/battle/party_gauge.c
     Object src/battle/battle_cursor.c
     Object src/battle/battle_finger.c

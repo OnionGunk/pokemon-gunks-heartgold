@@ -11,7 +11,8 @@ typedef struct GunkSave {
     u8 dexNavSearchLevel[MAX_SPECIES + 1]; // per species, raised by each DexNav encounter
     u8 padding_1EE[2];
     u16 dexNavSpecies; // the species the DexNav searches for with R
-    u8 reserved[0x400 - (MAX_SPECIES + 1) - 2 - 2];
+    u16 quickBall;     // the last ball thrown, shown by Quick Ball (gunk_quick_ball.h); 0 before any
+    u8 reserved[0x400 - (MAX_SPECIES + 1) - 2 - 2 - 2];
 } GunkSave;
 
 u32 GunkSave_sizeof(void);

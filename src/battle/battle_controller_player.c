@@ -14,6 +14,7 @@
 #include "battle/battle_controller.h"
 #include "battle/battle_controller_opponent.h"
 #include "battle/battle_system.h"
+#include "battle/gunk_quick_ball.h"
 #include "battle/overlay_12_0224E4FC.h"
 #include "msgdata/msg/msg_0197.h"
 
@@ -414,6 +415,13 @@ static void BattleControllerPlayer_SelectionScreenInput(BattleSystem *battleSyst
                         } else {
                             ctx->playerActions[battlerId].command = CONTROLLER_COMMAND_ITEM_INPUT;
                             ctx->unk_0[battlerId] = 7;
+                            // Gunk: Quick Ball's L pressed BAG: take the ball as if the Bag had returned it
+                            // (a BattleItem: id, the Poke Balls pocket), and skip showing the Bag
+                            u16 quickBall = GunkQuickBall_TakePending();
+                            if (quickBall != ITEM_NONE) {
+                                ctx->playerActions[battlerId].unk8 = quickBall | (BTLPOCKETLIST_BALLS << 16);
+                                ctx->unk_0[battlerId] = SSI_STATE_13;
+                            }
                         }
                         break;
                     case BATTLE_INPUT_POKEMON:
@@ -1755,6 +1763,7 @@ static void BattleControllerPlayer_ItemInput(BattleSystem *battleSystem, BattleC
             if (!(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) && !(BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TUTORIAL)) {
                 Bag_TakeItem(BattleSystem_GetBag(battleSystem), item->id, 1, HEAP_ID_BATTLE);
                 BagCursor_Battle_SetLastUsedItem(BattleSystem_GetBagCursor(battleSystem), item->id, item->page);
+                GunkQuickBall_SetLastThrown(item->id); // Gunk: Quick Ball shows it next time
             }
             break;
         }

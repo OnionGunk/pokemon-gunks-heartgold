@@ -5,9 +5,11 @@
 #include "constants/battle_menu.h"
 
 #include "battle/battle_controller_opponent.h"
+#include "battle/gunk_quick_ball.h"
 #include "msgdata/msg/msg_0197.h"
 
 #include "gf_gfx_loader.h"
+#include "gunk.h"
 #include "heap.h"
 #include "math_util.h"
 #include "obj_char_transfer.h"
@@ -1263,6 +1265,7 @@ BattleInput *BattleInput_New(void) {
     MI_CpuFill8(input, 0, sizeof(BattleInput));
 
     input->curMenuId = BATTLE_MENU_NONE;
+    GunkQuickBall_Reset(gGunkBattleSaveData); // a new battle
 
     return input;
 }
@@ -1452,6 +1455,8 @@ static void BattleInput_FreeDefaultResources(BattleInput *battleInput) {
     }
 }
 
+static BOOL BattleInput_IsGunkActionMenu(const BattleMenuTemplate *menuTemplate);
+
 void BattleInput_ChangeMenu(NARC *narc0, NARC *narc1, BattleInput *battleInput, int menuId, int a4, int *a5) {
     const BattleMenuTemplate *menuTemplate, *prevMenuTemplate;
 
@@ -1486,6 +1491,13 @@ void BattleInput_ChangeMenu(NARC *narc0, NARC *narc1, BattleInput *battleInput, 
     SpriteSystem_LoadPaletteBufferFromOpenNarc(BattleSystem_GetPaletteData(battleInput->battleSystem), PLTTBUF_SUB_OBJ, spriteSystem, spriteManager, narc1, 72, 0, 7, NNS_G2D_VRAM_TYPE_2DSUB, 20023);
 
     battleInput->curMenuId = menuId;
+
+    // Gunk: the Quick Ball widget is up only while the plain action menu is
+    if (BattleInput_IsGunkActionMenu(menuTemplate)) {
+        GunkQuickBall_Show(battleInput->battleSystem);
+    } else {
+        GunkQuickBall_Hide(battleInput->battleSystem);
+    }
 
     G2S_SetBlendAlpha(GX_BLEND_PLANEMASK_BG1, 15, 8, 12);
     BattleInput_FreePersistentResources(battleInput);
@@ -1694,6 +1706,11 @@ void BattleInput_DisableBallGauge(BattleInput *battleInput) {
     }
 }
 
+// Gunk: the four-button action menu (FIGHT, BAG, POKéMON, RUN), not Safari's, Pal Park's or the first battle's
+static BOOL BattleInput_IsGunkActionMenu(const BattleMenuTemplate *menuTemplate) {
+    return menuTemplate->touchInput == sTouchArrayMainMenu && menuTemplate->touchscreenRect == sTouchscreenRectMainMenuButtons;
+}
+
 int BattleInput_CheckTouch(BattleInput *battleInput) {
     int ret, rectHit, paletteId;
     int keyPressed = 0;
@@ -1711,7 +1728,28 @@ int BattleInput_CheckTouch(BattleInput *battleInput) {
     if (BattleSystem_GetBattleType(battleInput->battleSystem) & BATTLE_TYPE_TUTORIAL) {
         rectHit = BattleInput_CatchingTutorialMain(battleInput);
     } else {
-        rectHit = TouchscreenHitbox_FindRectAtTouchNew(menuTemplate->touchscreenRect);
+        rectHit = -1;
+        // Gunk: Quick Run (R presses RUN) and Quick Ball (L presses BAG, and the controller throws the ball shown)
+        if (BattleInput_IsGunkActionMenu(menuTemplate)) {
+            switch (GunkQuickBall_HandleInput(battleInput->battleSystem)) {
+            case GUNK_QUICK_BALL_INPUT_HELD:
+                return -1;
+            case GUNK_QUICK_BALL_INPUT_THROW:
+            case GUNK_QUICK_BALL_INPUT_BAG:
+                rectHit = 1; // BAG in sTouchArrayMainMenu
+                keyPressed++;
+                break;
+            case GUNK_QUICK_BALL_INPUT_RUN:
+                rectHit = 3; // RUN
+                keyPressed++;
+                break;
+            default:
+                break;
+            }
+        }
+        if (rectHit == -1) {
+            rectHit = TouchscreenHitbox_FindRectAtTouchNew(menuTemplate->touchscreenRect);
+        }
 
         if (rectHit == -1) {
             rectHit = BattleInput_CheckCursorInput(battleInput);

@@ -31,6 +31,7 @@
 #include "unk_02092BE8.h"
 
 BOOL gGunkExpAllOn; // gunk.h
+SaveData *gGunkBattleSaveData; // gunk.h
 
 static void BattleSetup_SetParty(BattleSetup *setup, Party *party, int battlerId);
 static void BattleSetup_SetProfile(BattleSetup *setup, PlayerProfile *profile, int battlerId);
@@ -256,6 +257,7 @@ void sub_02051D18(BattleSetup *setup, FieldSystem *fieldSystem, SaveData *saveDa
     setup->mapNumber = mapno;
     setup->saveData = saveData;
     gGunkExpAllOn = Gunk_IsSettingOn(saveData, GUNK_SETTING_EXP_ALL);
+    gGunkBattleSaveData = saveData;
 }
 
 void BattleSetup_InitFromFieldSystem(BattleSetup *setup, FieldSystem *fieldSystem) {

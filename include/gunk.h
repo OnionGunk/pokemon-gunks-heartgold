@@ -23,5 +23,7 @@ static inline BOOL Gunk_ToggleSetting(SaveData *saveData, u16 setting) {
 
 // set from the save before each battle (battle_setup.c); the Exp. All's share is given in battle_command.c
 extern BOOL gGunkExpAllOn;
+// the save, for Quick Ball's last thrown ball (set with gGunkExpAllOn; read in battle/gunk_quick_ball.c)
+extern SaveData *gGunkBattleSaveData;
 
 #endif // POKEHEARTGOLD_GUNK_H
