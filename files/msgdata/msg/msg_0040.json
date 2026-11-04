@@ -847,6 +847,10 @@
     {
       "id": "msg_0040_00138",
       "en_US": ["It’s shining! A rare-colored\n", "Pokémon is hiding there!"]
+    },
+    {
+      "id": "msg_0040_00139",
+      "en_US": "The Pokémon in the grass got away…"
     }
   ]
 }

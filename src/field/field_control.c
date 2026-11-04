@@ -26,6 +26,7 @@
 #include "follow_mon.h"
 #include "game_stats.h"
 #include "get_egg.h"
+#include "gunk_dexnav.h"
 #include "gunk_save.h"
 #include "gymmick.h"
 #include "gymmick_init.h"
@@ -300,6 +301,14 @@ int FieldInput_Process(FieldInput *fieldInput, FieldSystem *fieldSystem) {
             ov01_021F6B64_thunk(fieldSystem, fieldInput->registeredItem);
             return registeredItemResult;
         }
+    }
+
+    // Gunk: the DexNav search's 10 seconds are up: the Pokémon gets away, the patch stops, the chain is broken
+    if (gGunkDexNav.active && gGunkDexNav.searchFrames >= DEXNAV_SEARCH_FRAMES) {
+        gGunkDexNav.active = FALSE;
+        gGunkDexNav.chain = 0;
+        StartMapSceneScript(fieldSystem, std_gunk_dexnav_got_away, NULL);
+        return 1;
     }
 
     // Gunk: R searches again for the Pokémon last picked in the DexNav

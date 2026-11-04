@@ -1364,6 +1364,10 @@ static u8 EncounterGen_ChooseUnownForm(EncounterGenState *encounterGen) {
 }
 
 static BOOL addGeneratedMonToBattleSetupParty(int battler, EncounterGenState *encounterGen, Pokemon *pokemon, BattleSetup *battleSetup) {
+    // Gunk: meeting another species in the wild breaks the DexNav's chain (the same species keeps it)
+    if (GetMonData(pokemon, MON_DATA_SPECIES, NULL) != gGunkDexNav.chainSpecies) {
+        gGunkDexNav.chain = 0;
+    }
     WildMonSetRandomHeldItem(pokemon, battleSetup->battleType, !encounterGen->isEgg && encounterGen->ability == ABILITY_COMPOUNDEYES ? 1 : 0);
     if (GetMonData(pokemon, MON_DATA_SPECIES, NULL) == SPECIES_UNOWN) {
         u8 form = EncounterGen_ChooseUnownForm(encounterGen);
@@ -1450,12 +1454,14 @@ static void FieldSystem_UpdateTurnFrameCounter(FieldSystem *fieldSystem) {
 #define DEXNAV_MAX_DISTANCE    4
 #define DEXNAV_LOST_DISTANCE   8
 #define DEXNAV_PLACE_ATTEMPTS  40
-#define DEXNAV_RUSTLE_FRAMES   24
+#define DEXNAV_RUSTLE_FRAMES   15 // the patch shakes twice a second (the field runs at 30 frames a second)
 #define DEXNAV_MAX_LEVEL       255
 #define DEXNAV_SHINY_ODDS      4096
 #define DEXNAV_MAX_CANDIDATES  512
-#define DEXNAV_MAX_SEEDS       (DEXNAV_MAX_CANDIDATES * 200)
-#define DEXNAV_MAX_SHINY_SEEDS 0x100000
+#define DEXNAV_MAX_SHINY_STEPS 0x400000 // a 1% slot takes about 800000 on average: missed once in about 200 shiny rolls
+#define DEXNAV_LC_MUL          1103515245 // LCRandom's
+#define DEXNAV_LC_ADD          24691
+#define DEXNAV_LC_MUL_INV      0xEEB9EB65 // 1103515245 * this == 1 (mod 2^32)
 
 // the grass effect a Pokémon walking into tall grass makes (field overlay)
 void ov01_021FF0E4(LocalMapObject *mapObject, int a1, int x, int z, int a4);
@@ -1500,12 +1506,24 @@ int GunkDexNav_ListSpecies(FieldSystem *fieldSystem, u16 *species, int max) {
 }
 
 static u16 DexNav_Rand(u32 *state) {
-    *state = *state * 1103515245 + 24691;
+    *state = *state * DEXNAV_LC_MUL + DEXNAV_LC_ADD;
     return *state >> 16;
 }
 
-static u32 DexNav_Random32(void) {
-    return (LCRandom() << 16) | LCRandom();
+// The RNG state before this one: every state has exactly one
+static u32 DexNav_RandBack(u32 state) {
+    return (state - DEXNAV_LC_ADD) * DEXNAV_LC_MUL_INV;
+}
+
+// x % 25 and x % 100 without dividing: the ARM9 has no divide instruction, and the shiny search below takes these
+// a few hundred thousand times. x / 25 == (x * 0x51EB851F) >> 35 for every u32, and x / 100 == ((x / 4) * 20972) >> 19
+// for every u16.
+static inline u32 DexNav_Mod25(u32 x) {
+    return x - (u32)(((u64)x * 0x51EB851F) >> 35) * 25;
+}
+
+static inline u16 DexNav_Mod100(u16 x) {
+    return x - ((((u32)x >> 2) * 20972) >> 19) * 100;
 }
 
 static u8 DexNav_SlotFromRoll(u8 roll) {
@@ -1517,22 +1535,18 @@ static u8 DexNav_SlotFromRoll(u8 roll) {
     return slot;
 }
 
-// A wild grass encounter exactly as HeartGold makes one ("Method K"), so the Pokémon passes legality checks: from
-// an RNG seed the slot (% 100), the level roll, the nature (% 25), personality values until one has that nature,
-// then the IVs (CreateBoxMon). The species and level come from the rolled slot.
-static BOOL DexNav_GenerateFrame(u32 seed, u16 slots, DexNavFrame *frame) {
-    u32 state = seed;
-    u8 slot = DexNav_SlotFromRoll(DexNav_Rand(&state) % 100);
-    if ((slots & (1 << slot)) == 0) {
-        return FALSE;
-    }
-    DexNav_Rand(&state); // the level roll: a land slot has one level, but the roll is still made
-    u8 nature = DexNav_Rand(&state) % 25;
+// A wild grass encounter exactly as HeartGold makes one ("Method K", lead without Synchronize), so the Pok�mon
+// passes legality checks: from an RNG seed the slot (% 100), the nature (% 25), personality values until one has
+// that nature, then the IVs (CreateBoxMon). A land slot has one level (encSlots[slot].maxLevel), so no level roll
+// comes between the slot and the nature (EncounterSlot_WildMonLevelRoll is for surfing, fishing and the rest).
+// This makes the rest of it from the RNG state of a slot roll that gave `slot`.
+static void DexNav_FrameAfterSlot(u32 state, u8 slot, DexNavFrame *frame) {
+    u8 nature = DexNav_Mod25(DexNav_Rand(&state));
     u32 personality;
     do {
         personality = DexNav_Rand(&state);
         personality |= (u32)DexNav_Rand(&state) << 16;
-    } while (personality % 25 != nature);
+    } while (DexNav_Mod25(personality) != nature);
     u16 ivs1 = DexNav_Rand(&state);
     u16 ivs2 = DexNav_Rand(&state);
     // HP, Attack, Defense, then Speed, Sp. Atk, Sp. Def, as CreateBoxMon unpacks them
@@ -1544,7 +1558,56 @@ static BOOL DexNav_GenerateFrame(u32 seed, u16 slots, DexNavFrame *frame) {
     frame->ivs[5] = (ivs2 >> 10) & 0x1F;
     frame->personality = personality;
     frame->slot = slot;
-    return TRUE;
+}
+
+// An encounter of this species: seeds one after another (each the state after the last) until one rolls a slot of
+// this species. Every state is the seed of exactly one encounter, so this is the encounter that seed makes.
+static void DexNav_GenerateFrame(u16 slots, DexNavFrame *frame) {
+    u32 state = ((u32)LCRandom() << 16) | LCRandom();
+    u8 slot;
+    do {
+        slot = DexNav_SlotFromRoll(DexNav_Mod100(DexNav_Rand(&state)));
+    } while ((slots & (1 << slot)) == 0);
+    DexNav_FrameAfterSlot(state, slot, frame);
+}
+
+static BOOL DexNav_IsShiny(u32 otId, u32 personality) {
+    return ((otId >> 16) ^ (otId & 0xFFFF) ^ (personality >> 16) ^ (personality & 0xFFFF)) < 8;
+}
+
+// A shiny encounter of this species, found backwards: making encounters until one is shiny takes 8192 of them on
+// average, each with its personality loop, which froze the game for seconds. Instead this steps through RNG states
+// for two in a row that make a shiny personality (low half, then high half); then it steps back from there for the
+// nature roll this personality matches, with no matching personality in between, and before that a slot roll of
+// this species. The seed before that slot roll makes exactly this encounter (DexNav_FrameAfterSlot gives it back).
+static BOOL DexNav_FindShinyFrame(u16 slots, u32 otId, DexNavFrame *frame) {
+    u32 shinyKey = ((otId >> 16) ^ (otId & 0xFFFF)) << 16; // (low ^ high ^ shinyKey) >> 16 < 8: shiny
+    u32 low = ((u32)LCRandom() << 16) | LCRandom();
+    for (u32 step = 0; step < DEXNAV_MAX_SHINY_STEPS; step++) {
+        u32 high = low * DEXNAV_LC_MUL + DEXNAV_LC_ADD;
+        if ((low ^ high ^ shinyKey) < 0x80000) {
+            u32 nature = DexNav_Mod25((low >> 16) | (high & 0xFFFF0000));
+            u32 state = DexNav_RandBack(low); // the nature roll, if this personality is the first one tried
+            while (TRUE) {
+                if (DexNav_Mod25(state >> 16) == nature) {
+                    u32 slotState = DexNav_RandBack(state);
+                    u8 slot = DexNav_SlotFromRoll(DexNav_Mod100(slotState >> 16));
+                    if (slots & (1 << slot)) {
+                        DexNav_FrameAfterSlot(slotState, slot, frame);
+                        return DexNav_IsShiny(otId, frame->personality);
+                    }
+                }
+                // one personality further back: it must not match the nature, or it would have been the one taken
+                u32 earlierLow = DexNav_RandBack(state);
+                if (DexNav_Mod25((earlierLow >> 16) | (state & 0xFFFF0000)) == nature) {
+                    break;
+                }
+                state = DexNav_RandBack(earlierLow);
+            }
+        }
+        low = high;
+    }
+    return FALSE;
 }
 
 static int DexNav_CountPerfectIVs(const DexNavFrame *frame) {
@@ -1569,9 +1632,6 @@ static BOOL DexNav_IsBetter(const DexNavFrame *frame, const DexNavFrame *best) {
     return perfect > bestPerfect || (perfect == bestPerfect && DexNav_SumIVs(frame) > DexNav_SumIVs(best));
 }
 
-static BOOL DexNav_IsShiny(u32 otId, u32 personality) {
-    return ((otId >> 16) ^ (otId & 0xFFFF) ^ (personality >> 16) ^ (personality & 0xFFFF)) < 8;
-}
 
 // Higher search levels and longer chains roll more encounters and keep the one with the best IVs, and give more
 // shiny rolls; a shiny is searched for among the same legal encounters.
@@ -1600,31 +1660,22 @@ static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
     s->shiny = FALSE;
     for (int i = 0; i < shinyRolls; i++) {
         if (LCRandRange(DEXNAV_SHINY_ODDS) == 0) {
-            for (int attempt = 0; attempt < DEXNAV_MAX_SHINY_SEEDS; attempt++) {
-                if (DexNav_GenerateFrame(DexNav_Random32(), slots, &frame) && DexNav_IsShiny(otId, frame.personality)) {
-                    best = frame;
-                    found = 1;
-                    s->shiny = TRUE;
-                    break;
-                }
+            if (DexNav_FindShinyFrame(slots, otId, &best)) {
+                found = 1;
+                s->shiny = TRUE;
             }
             break;
         }
     }
-    for (int attempt = 0; !s->shiny && found < candidates && attempt < DEXNAV_MAX_SEEDS; attempt++) {
-        if (DexNav_GenerateFrame(DexNav_Random32(), slots, &frame)) {
-            if (found == 0 || DexNav_IsBetter(&frame, &best)) {
-                best = frame;
-            }
-            found++;
+    for (; !s->shiny && found < candidates; found++) {
+        DexNav_GenerateFrame(slots, &frame);
+        if (found == 0 || DexNav_IsBetter(&frame, &best)) {
+            best = frame;
         }
-    }
-    if (found == 0) {
-        return FALSE;
     }
 
     s->personality = best.personality;
-    s->level = encSlots[best.slot].minLevel;
+    s->level = encSlots[best.slot].maxLevel; // as a walking encounter takes it
     s->perfectIVs = DexNav_CountPerfectIVs(&best);
     for (int i = 0; i < 6; i++) {
         s->ivs[i] = best.ivs[i];
@@ -1679,6 +1730,7 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
         }
         s->active = TRUE;
         s->frames = 0;
+        s->searchFrames = 0;
         DexNav_Rustle(fieldSystem);
         return DEXNAV_SEARCH_STARTED;
     }
@@ -1698,6 +1750,12 @@ void GunkDexNav_Update(FieldSystem *fieldSystem) {
         s->active = FALSE;
         s->chain = 0; // walking away breaks the chain too
         return;
+    }
+    if (fieldSystem->taskman != NULL) {
+        return; // a script, menu or warp: the search's time and the shaking wait (they count in the field only)
+    }
+    if (s->searchFrames < DEXNAV_SEARCH_FRAMES) {
+        s->searchFrames++; // at the limit, field_control.c ends the search once the player can act
     }
     if (++s->frames >= DEXNAV_RUSTLE_FRAMES) {
         s->frames = 0;

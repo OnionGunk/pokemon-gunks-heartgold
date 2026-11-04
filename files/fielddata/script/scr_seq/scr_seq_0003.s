@@ -79,6 +79,7 @@
 	ScrDef scr_seq_0003_071
 	ScrDef scr_seq_0003_072
 	ScrDef scr_seq_0003_073
+	ScrDef scr_seq_0003_074
 	ScrDefEnd
 
 scr_seq_0003_002:
@@ -1916,6 +1917,15 @@ _GunkDexNavNoTallGrass:
 	NPCMsg msg_0040_00136
 	WaitABPress
 _GunkDexNavEnd:
+	CloseMsg
+	ReleaseAll
+	End
+
+// the search's 10 seconds ran out (std_gunk_dexnav_got_away, from GunkDexNav_Update): a short message
+scr_seq_0003_074:
+	LockAll
+	NPCMsg msg_0040_00139
+	Wait 45, VAR_SPECIAL_RESULT
 	CloseMsg
 	ReleaseAll
 	End

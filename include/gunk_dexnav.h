@@ -10,6 +10,7 @@
 // shiny rolls.
 
 #define DEXNAV_MENU_MAX 7 // species in the menu (the field menu has no scrolling)
+#define DEXNAV_SEARCH_FRAMES 300 // a search lasts 10 seconds in the field (30 frames a second); then the Pokémon gets away
 
 enum {
     DEXNAV_SEARCH_STARTED,
@@ -33,7 +34,8 @@ typedef struct GunkDexNavState {
     u16 chainSpecies;
     u16 chain;
     u32 chainMapId;
-    u16 frames;
+    u16 frames;       // since the patch last shook
+    u16 searchFrames; // since the search started, in the field (it ends at DEXNAV_SEARCH_FRAMES)
 } GunkDexNavState;
 
 extern GunkDexNavState gGunkDexNav;
