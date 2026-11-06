@@ -18,6 +18,7 @@
 #include "gf_rtc.h"
 #include "gunk.h"
 #include "gunk_dexnav.h"
+#include "gunk_dexnav_app.h"
 #include "gunk_save.h"
 #include "map_events.h"
 #include "math_util.h"
@@ -1470,7 +1471,15 @@ typedef struct DexNavFrame {
     u32 personality;
     u8 ivs[6];
     u8 slot;
+    u8 level;
 } DexNavFrame;
+
+// The encounter table a search rolls from: the grass table, or the surf table for a Surf search
+typedef struct DexNavTable {
+    BOOL water;
+    u16 slots; // the slots holding the species searched for
+    EncounterSlot encSlots[NUM_ENCOUNTERS_LAND];
+} DexNavTable;
 
 static int DexNav_Abs(int value) {
     return value < 0 ? -value : value;
@@ -1482,6 +1491,46 @@ static void DexNav_GetLandSlots(FieldSystem *fieldSystem, EncounterSlot *encSlot
     EncSlotArray_Init_Land(encData, encSlots);
     EncSlots_Update_LandSwarm(fieldSystem, encData, &encSlots[0], &encSlots[1]);
     EncSlotArray_Update_HoennSinnohSounds(fieldSystem, encData, encSlots);
+}
+
+static void DexNav_GetSurfSlots(FieldSystem *fieldSystem, EncounterSlot *encSlots) {
+    const EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
+    for (int i = 0; i < NUM_ENCOUNTERS_SURF; i++) {
+        encSlots[i].species = encData->surfSlots[i].species;
+        encSlots[i].maxLevel = encData->surfSlots[i].level_max;
+        encSlots[i].minLevel = encData->surfSlots[i].level_min;
+    }
+    EncSlots_Update_SurfingSwarm(fieldSystem, encData, encSlots);
+}
+
+// Whether a species can be met in this area's grass (or by surfing) right now: what a search can look for.
+static BOOL DexNav_AreaHas(FieldSystem *fieldSystem, BOOL water, u16 species) {
+    EncounterSlot encSlots[NUM_ENCOUNTERS_LAND];
+    const EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
+    int count;
+
+    if (species == SPECIES_NONE || species == SPECIES_UNOWN) {
+        return FALSE;
+    }
+    if (water) {
+        if (encData->encounterRate_surfing == 0) {
+            return FALSE;
+        }
+        DexNav_GetSurfSlots(fieldSystem, encSlots);
+        count = NUM_ENCOUNTERS_SURF;
+    } else {
+        if (encData->encounterRate_walking == 0) {
+            return FALSE;
+        }
+        DexNav_GetLandSlots(fieldSystem, encSlots);
+        count = NUM_ENCOUNTERS_LAND;
+    }
+    for (int i = 0; i < count; i++) {
+        if (encSlots[i].species == species) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 int GunkDexNav_ListSpecies(FieldSystem *fieldSystem, u16 *species, int max) {
@@ -1505,6 +1554,90 @@ int GunkDexNav_ListSpecies(FieldSystem *fieldSystem, u16 *species, int max) {
     return count;
 }
 
+// Adds a slot's Pokemon to a DexNav screen section, or widens the level range of the entry it already has.
+static void DexNav_AddEntry(GunkDexNavEntry *section, const EncounterSlot *slot, u8 method) {
+    if (slot->species == SPECIES_NONE || slot->species == SPECIES_UNOWN) {
+        return;
+    }
+    for (int i = 0; i < DEXNAV_SECTION_SLOTS; i++) {
+        GunkDexNavEntry *e = &section[i];
+        if (e->species == SPECIES_NONE) {
+            e->species = slot->species;
+            e->method = method;
+            e->minLevel = slot->minLevel;
+            e->maxLevel = slot->maxLevel;
+            return;
+        }
+        if (e->species == slot->species) {
+            if (slot->minLevel < e->minLevel) {
+                e->minLevel = slot->minLevel;
+            }
+            if (slot->maxLevel > e->maxLevel) {
+                e->maxLevel = slot->maxLevel;
+            }
+            return;
+        }
+    }
+}
+
+// The DexNav screen's view of this area right now: grass (with today's swarm and the radio's Hoenn/Sinnoh Sound),
+// then surfing and the three rods.
+void GunkDexNav_BuildArea(FieldSystem *fieldSystem, GunkDexNavArgs *args) {
+    const EncounterData *encData = MapEvents_GetLoadedEncTable(fieldSystem);
+    EncounterSlot base[NUM_ENCOUNTERS_LAND], slots[NUM_ENCOUNTERS_LAND];
+    GunkDexNavEntry *land = &args->slots[0], *water = &args->slots[DEXNAV_SECTION_SLOTS];
+
+    MI_CpuClear8(args->slots, sizeof(args->slots));
+    if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD) {
+        return; // the Safari Zone and Bug-Catching Contest have their own encounters
+    }
+    if (encData->encounterRate_walking != 0) {
+        EncSlotArray_Init_Land(encData, base);
+        DexNav_GetLandSlots(fieldSystem, slots);
+        for (int i = 0; i < NUM_ENCOUNTERS_LAND; i++) {
+            u8 method = DEXNAV_METHOD_GRASS;
+            if (slots[i].species != base[i].species) {
+                if (i < 2) {
+                    method = DEXNAV_METHOD_SWARM;
+                } else {
+                    method = GetRadioMusicPlayingSeq() == RADIO_MUSIC_SEQ_HOENN_SOUNDS ? DEXNAV_METHOD_HOENN_SOUND : DEXNAV_METHOD_SINNOH_SOUND;
+                }
+            }
+            DexNav_AddEntry(land, &slots[i], method);
+        }
+    }
+    if (encData->encounterRate_surfing != 0) {
+        for (int i = 0; i < NUM_ENCOUNTERS_SURF; i++) {
+            slots[i].species = encData->surfSlots[i].species;
+            slots[i].maxLevel = encData->surfSlots[i].level_max;
+            slots[i].minLevel = encData->surfSlots[i].level_min;
+        }
+        u16 surfSpecies = slots[0].species;
+        EncSlots_Update_SurfingSwarm(fieldSystem, encData, slots);
+        for (int i = 0; i < NUM_ENCOUNTERS_SURF; i++) {
+            DexNav_AddEntry(water, &slots[i], i == 0 && slots[0].species != surfSpecies ? DEXNAV_METHOD_SURF_SWARM : DEXNAV_METHOD_SURF);
+        }
+    }
+    static const u8 sRodMethods[] = { DEXNAV_METHOD_OLD_ROD, DEXNAV_METHOD_GOOD_ROD, DEXNAV_METHOD_SUPER_ROD };
+    const u8 rates[] = { encData->encounterRate_oldRod, encData->encounterRate_goodRod, encData->encounterRate_superRod };
+    const EncounterDataSlot *rodSlots[] = { encData->oldRodSlots, encData->goodRodSlots, encData->superRodSlots };
+    for (int rod = 0; rod < 3; rod++) {
+        if (rates[rod] == 0) {
+            continue;
+        }
+        for (int i = 0; i < NUM_ENCOUNTERS_FISH; i++) {
+            slots[i].species = rodSlots[rod][i].species;
+            slots[i].maxLevel = rodSlots[rod][i].level_max;
+            slots[i].minLevel = rodSlots[rod][i].level_min;
+        }
+        EncSlotArray_Update_NightFishing(encData, ROD_TYPE_OLD + rod, slots);
+        EncSlots_Update_FishingSwarm(fieldSystem, ROD_TYPE_OLD + rod, encData, slots);
+        for (int i = 0; i < NUM_ENCOUNTERS_FISH; i++) {
+            DexNav_AddEntry(water, &slots[i], sRodMethods[rod]);
+        }
+    }
+}
+
 static u16 DexNav_Rand(u32 *state) {
     *state = *state * DEXNAV_LC_MUL + DEXNAV_LC_ADD;
     return *state >> 16;
@@ -1526,10 +1659,13 @@ static inline u16 DexNav_Mod100(u16 x) {
     return x - ((((u32)x >> 2) * 20972) >> 19) * 100;
 }
 
-static u8 DexNav_SlotFromRoll(u8 roll) {
+// the slot rolls of EncounterSlot_WildMonSlotRoll_Land and EncounterSlot_WildMonSlotRoll_Surfing
+static u8 DexNav_SlotFromRoll(BOOL water, u8 roll) {
     static const u8 sSlotEnds[NUM_ENCOUNTERS_LAND] = { 20, 40, 50, 60, 70, 80, 85, 90, 94, 98, 99, 100 };
+    static const u8 sSurfSlotEnds[NUM_ENCOUNTERS_SURF] = { 60, 90, 95, 99, 100 };
+    const u8 *slotEnds = water ? sSurfSlotEnds : sSlotEnds;
     u8 slot = 0;
-    while (roll >= sSlotEnds[slot]) {
+    while (roll >= slotEnds[slot]) {
         slot++;
     }
     return slot;
@@ -1539,8 +1675,17 @@ static u8 DexNav_SlotFromRoll(u8 roll) {
 // passes legality checks: from an RNG seed the slot (% 100), the nature (% 25), personality values until one has
 // that nature, then the IVs (CreateBoxMon). A land slot has one level (encSlots[slot].maxLevel), so no level roll
 // comes between the slot and the nature (EncounterSlot_WildMonLevelRoll is for surfing, fishing and the rest).
-// This makes the rest of it from the RNG state of a slot roll that gave `slot`.
-static void DexNav_FrameAfterSlot(u32 state, u8 slot, DexNavFrame *frame) {
+// This makes the rest of it from the RNG state of a slot roll that gave `slot`. Surfing is the same with the level
+// rolled between the slot and the nature, as EncounterSlot_WildMonLevelRoll does it.
+static void DexNav_FrameAfterSlot(const DexNavTable *table, u32 state, u8 slot, DexNavFrame *frame) {
+    const EncounterSlot *encSlot = &table->encSlots[slot];
+    frame->level = encSlot->maxLevel;
+    if (table->water) {
+        u8 lo = encSlot->minLevel <= encSlot->maxLevel ? encSlot->minLevel : encSlot->maxLevel;
+        u8 hi = encSlot->minLevel <= encSlot->maxLevel ? encSlot->maxLevel : encSlot->minLevel;
+        u8 range = hi - lo + 1;
+        frame->level = lo + DexNav_Rand(&state) % range;
+    }
     u8 nature = DexNav_Mod25(DexNav_Rand(&state));
     u32 personality;
     do {
@@ -1562,13 +1707,13 @@ static void DexNav_FrameAfterSlot(u32 state, u8 slot, DexNavFrame *frame) {
 
 // An encounter of this species: seeds one after another (each the state after the last) until one rolls a slot of
 // this species. Every state is the seed of exactly one encounter, so this is the encounter that seed makes.
-static void DexNav_GenerateFrame(u16 slots, DexNavFrame *frame) {
+static void DexNav_GenerateFrame(const DexNavTable *table, DexNavFrame *frame) {
     u32 state = ((u32)LCRandom() << 16) | LCRandom();
     u8 slot;
     do {
-        slot = DexNav_SlotFromRoll(DexNav_Mod100(DexNav_Rand(&state)));
-    } while ((slots & (1 << slot)) == 0);
-    DexNav_FrameAfterSlot(state, slot, frame);
+        slot = DexNav_SlotFromRoll(table->water, DexNav_Mod100(DexNav_Rand(&state)));
+    } while ((table->slots & (1 << slot)) == 0);
+    DexNav_FrameAfterSlot(table, state, slot, frame);
 }
 
 static BOOL DexNav_IsShiny(u32 otId, u32 personality) {
@@ -1579,8 +1724,9 @@ static BOOL DexNav_IsShiny(u32 otId, u32 personality) {
 // average, each with its personality loop, which froze the game for seconds. Instead this steps through RNG states
 // for two in a row that make a shiny personality (low half, then high half); then it steps back from there for the
 // nature roll this personality matches, with no matching personality in between, and before that a slot roll of
-// this species. The seed before that slot roll makes exactly this encounter (DexNav_FrameAfterSlot gives it back).
-static BOOL DexNav_FindShinyFrame(u16 slots, u32 otId, DexNavFrame *frame) {
+// this species (and for surfing, the level roll between them). The seed before that slot roll makes exactly this
+// encounter (DexNav_FrameAfterSlot gives it back).
+static BOOL DexNav_FindShinyFrame(const DexNavTable *table, u32 otId, DexNavFrame *frame) {
     u32 shinyKey = ((otId >> 16) ^ (otId & 0xFFFF)) << 16; // (low ^ high ^ shinyKey) >> 16 < 8: shiny
     u32 low = ((u32)LCRandom() << 16) | LCRandom();
     for (u32 step = 0; step < DEXNAV_MAX_SHINY_STEPS; step++) {
@@ -1591,9 +1737,12 @@ static BOOL DexNav_FindShinyFrame(u16 slots, u32 otId, DexNavFrame *frame) {
             while (TRUE) {
                 if (DexNav_Mod25(state >> 16) == nature) {
                     u32 slotState = DexNav_RandBack(state);
-                    u8 slot = DexNav_SlotFromRoll(DexNav_Mod100(slotState >> 16));
-                    if (slots & (1 << slot)) {
-                        DexNav_FrameAfterSlot(slotState, slot, frame);
+                    if (table->water) {
+                        slotState = DexNav_RandBack(slotState); // past the level roll
+                    }
+                    u8 slot = DexNav_SlotFromRoll(table->water, DexNav_Mod100(slotState >> 16));
+                    if (table->slots & (1 << slot)) {
+                        DexNav_FrameAfterSlot(table, slotState, slot, frame);
                         return DexNav_IsShiny(otId, frame->personality);
                     }
                 }
@@ -1639,18 +1788,23 @@ static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
     GunkDexNavState *s = &gGunkDexNav;
     int shinyRolls = 1 + s->searchLevel / 10 + s->chain / 5;
     int candidates = 1 + s->searchLevel / 2 + s->chain * 2;
-    EncounterSlot encSlots[NUM_ENCOUNTERS_LAND];
-    u16 slots = 0;
+    DexNavTable table;
     DexNavFrame frame, best;
     int found = 0;
 
-    DexNav_GetLandSlots(fieldSystem, encSlots);
-    for (int i = 0; i < NUM_ENCOUNTERS_LAND; i++) {
-        if (encSlots[i].species == s->species) {
-            slots |= 1 << i;
+    table.water = s->water;
+    table.slots = 0;
+    if (s->water) {
+        DexNav_GetSurfSlots(fieldSystem, table.encSlots);
+    } else {
+        DexNav_GetLandSlots(fieldSystem, table.encSlots);
+    }
+    for (int i = 0; i < (s->water ? NUM_ENCOUNTERS_SURF : NUM_ENCOUNTERS_LAND); i++) {
+        if (table.encSlots[i].species == s->species) {
+            table.slots |= 1 << i;
         }
     }
-    if (slots == 0) {
+    if (table.slots == 0) {
         return FALSE;
     }
     if (candidates > DEXNAV_MAX_CANDIDATES) {
@@ -1660,7 +1814,7 @@ static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
     s->shiny = FALSE;
     for (int i = 0; i < shinyRolls; i++) {
         if (LCRandRange(DEXNAV_SHINY_ODDS) == 0) {
-            if (DexNav_FindShinyFrame(slots, otId, &best)) {
+            if (DexNav_FindShinyFrame(&table, otId, &best)) {
                 found = 1;
                 s->shiny = TRUE;
             }
@@ -1668,14 +1822,14 @@ static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
         }
     }
     for (; !s->shiny && found < candidates; found++) {
-        DexNav_GenerateFrame(slots, &frame);
+        DexNav_GenerateFrame(&table, &frame);
         if (found == 0 || DexNav_IsBetter(&frame, &best)) {
             best = frame;
         }
     }
 
     s->personality = best.personality;
-    s->level = encSlots[best.slot].maxLevel; // as a walking encounter takes it
+    s->level = best.level;
     s->perfectIVs = DexNav_CountPerfectIVs(&best);
     for (int i = 0; i < 6; i++) {
         s->ivs[i] = best.ivs[i];
@@ -1692,18 +1846,20 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
     int playerX = PlayerAvatar_GetXCoord(fieldSystem->playerAvatar);
     int playerZ = PlayerAvatar_GetZCoord(fieldSystem->playerAvatar);
     int span = DEXNAV_MAX_DISTANCE * 2 + 1;
-    u16 list[NUM_ENCOUNTERS_LAND];
-    int count = GunkDexNav_ListSpecies(fieldSystem, list, NUM_ENCOUNTERS_LAND);
-    BOOL here = FALSE;
+    // surfing, the patch goes on the water and the Pokemon comes from the surf table
+    BOOL water = PlayerAvatar_GetState(fieldSystem->playerAvatar) == PLAYER_STATE_SURFING;
 
     s->active = FALSE;
+    if (species == SPECIES_NONE) {
+        return DEXNAV_SEARCH_NONE_CHOSEN;
+    }
     if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD || Save_VarsFlags_CheckBugContestFlag(Save_VarsFlags_Get(fieldSystem->saveData))) {
         return DEXNAV_SEARCH_NOT_HERE;
     }
-    for (int i = 0; i < count; i++) {
-        here |= list[i] == species;
-    }
-    if (!here) {
+    if (!DexNav_AreaHas(fieldSystem, water, species)) {
+        if (DexNav_AreaHas(fieldSystem, !water, species)) {
+            return water ? DEXNAV_SEARCH_GRASS_ONLY : DEXNAV_SEARCH_SURF_ONLY;
+        }
         return DEXNAV_SEARCH_NOT_HERE;
     }
     Save_GunkSave_Get(fieldSystem->saveData)->dexNavSpecies = species;
@@ -1714,10 +1870,12 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
         if (DexNav_Abs(dx) < DEXNAV_MIN_DISTANCE && DexNav_Abs(dz) < DEXNAV_MIN_DISTANCE) {
             continue;
         }
-        if (!MetatileBehavior_IsTallGrass(GetMetatileBehavior(fieldSystem, playerX + dx, playerZ + dz))) {
+        u8 behavior = GetMetatileBehavior(fieldSystem, playerX + dx, playerZ + dz);
+        if (water ? !MetatileBehavior_IsSurfableWater(behavior) : !MetatileBehavior_IsTallGrass(behavior)) {
             continue;
         }
         s->species = species;
+        s->water = water;
         s->x = playerX + dx;
         s->z = playerZ + dz;
         s->mapId = fieldSystem->location->mapId;
@@ -1734,7 +1892,7 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
         DexNav_Rustle(fieldSystem);
         return DEXNAV_SEARCH_STARTED;
     }
-    return DEXNAV_SEARCH_NO_GRASS;
+    return water ? DEXNAV_SEARCH_NO_WATER : DEXNAV_SEARCH_NO_GRASS;
 }
 
 // every frame while the field runs (FieldSystem_Control): keeps the patch rustling, and drops the search when the

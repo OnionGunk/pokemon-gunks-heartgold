@@ -1869,17 +1869,17 @@ _GunkTutorOneMove:
 	NPCMsg msg_0040_00123
 	GoTo _0A2E
 
-// Gunk: the DexNav (std_gunk_dexnav): pick one of the area's grass Pokémon, then search for it
+// Gunk: the DexNav (std_gunk_dexnav): the DexNav screen, then a search for the land Pokémon chosen
 scr_seq_0003_072:
 	LockAll
-	NPCMsg msg_0040_00129
-	TouchscreenMenuHide
+	FadeScreen 6, 1, 0, RGB_BLACK
+	WaitFade
 	GunkDexNavMenu VAR_SPECIAL_RESULT
-	TouchscreenMenuShow
-	Compare VAR_SPECIAL_RESULT, 0
-	GoToIfEq _GunkDexNavNoGrass
+	RestoreOverworld
+	FadeScreen 6, 1, 1, RGB_BLACK
+	WaitFade
 	Compare VAR_SPECIAL_RESULT, 0xFFFE
-	GoToIfGe _GunkDexNavEnd
+	GoToIfGe _GunkDexNavClosed
 	GunkDexNavSearch VAR_SPECIAL_RESULT, VAR_SPECIAL_x8005
 	GoTo _GunkDexNavResult
 
@@ -1894,17 +1894,27 @@ _GunkDexNavResult:
 	GoToIfEq _GunkDexNavNotHere
 	Compare VAR_SPECIAL_x8005, 2
 	GoToIfEq _GunkDexNavNoTallGrass
+	Compare VAR_SPECIAL_x8005, 3
+	GoToIfEq _GunkDexNavNoneChosen
+	Compare VAR_SPECIAL_x8005, 4
+	GoToIfEq _GunkDexNavNoWater
+	Compare VAR_SPECIAL_x8005, 5
+	GoToIfEq _GunkDexNavSurfOnly
+	Compare VAR_SPECIAL_x8005, 6
+	GoToIfEq _GunkDexNavGrassOnly
 	PlaySE SEQ_SE_DP_SELECT
+	Compare VAR_SPECIAL_x8006, 0
+	GoToIfNe _GunkDexNavFoundInWater
 	NPCMsg msg_0040_00137
+	GoTo _GunkDexNavFound
+
+_GunkDexNavFoundInWater:
+	NPCMsg msg_0040_00144
+_GunkDexNavFound:
 	WaitABPress
 	Compare VAR_SPECIAL_x8004, 0
 	GoToIfEq _GunkDexNavEnd
 	NPCMsg msg_0040_00138
-	WaitABPress
-	GoTo _GunkDexNavEnd
-
-_GunkDexNavNoGrass:
-	NPCMsg msg_0040_00134
 	WaitABPress
 	GoTo _GunkDexNavEnd
 
@@ -1913,18 +1923,46 @@ _GunkDexNavNotHere:
 	WaitABPress
 	GoTo _GunkDexNavEnd
 
+_GunkDexNavNoneChosen:
+	NPCMsg msg_0040_00140
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavNoWater:
+	NPCMsg msg_0040_00141
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavSurfOnly:
+	NPCMsg msg_0040_00142
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
+_GunkDexNavGrassOnly:
+	NPCMsg msg_0040_00143
+	WaitABPress
+	GoTo _GunkDexNavEnd
+
 _GunkDexNavNoTallGrass:
 	NPCMsg msg_0040_00136
 	WaitABPress
 _GunkDexNavEnd:
 	CloseMsg
+_GunkDexNavClosed:
 	ReleaseAll
 	End
 
 // the search's 10 seconds ran out (std_gunk_dexnav_got_away, from GunkDexNav_Update): a short message
 scr_seq_0003_074:
 	LockAll
+	Compare VAR_SPECIAL_x8006, 0
+	GoToIfNe _GunkDexNavGotAwayInWater
 	NPCMsg msg_0040_00139
+	GoTo _GunkDexNavGotAway
+
+_GunkDexNavGotAwayInWater:
+	NPCMsg msg_0040_00145
+_GunkDexNavGotAway:
 	Wait 45, VAR_SPECIAL_RESULT
 	CloseMsg
 	ReleaseAll

@@ -14,8 +14,12 @@
 
 enum {
     DEXNAV_SEARCH_STARTED,
-    DEXNAV_SEARCH_NOT_HERE,  // the species isn't in this area's grass right now
+    DEXNAV_SEARCH_NOT_HERE,  // the species isn't in this area's grass or water right now
     DEXNAV_SEARCH_NO_GRASS,  // no tall grass close enough
+    DEXNAV_SEARCH_NONE_CHOSEN, // R before choosing a Pokémon on the DexNav screen
+    DEXNAV_SEARCH_NO_WATER,    // surfing, no water close enough
+    DEXNAV_SEARCH_SURF_ONLY,   // on land: the species is only met by surfing here
+    DEXNAV_SEARCH_GRASS_ONLY,  // surfing: the species is only met in the grass here
 };
 
 // Kept in the main binary so it survives the field overlays unloading for menus and battles.
@@ -37,12 +41,15 @@ typedef struct GunkDexNavState {
     u16 frames;       // since the patch last shook
     u16 searchFrames; // since the search started, in the field (it ends at DEXNAV_SEARCH_FRAMES)
     BOOL inBattle;    // the wild battle running is the DexNav's (running from it breaks the chain: encounter.c)
+    BOOL water;       // a Surf search: the patch is on water and the Pokémon comes from the surf table
 } GunkDexNavState;
 
 extern GunkDexNavState gGunkDexNav;
 
 // encounter_check.c (overlay 2, loaded with the field)
 int GunkDexNav_ListSpecies(FieldSystem *fieldSystem, u16 *species, int max);
+struct GunkDexNavArgs;
+void GunkDexNav_BuildArea(FieldSystem *fieldSystem, struct GunkDexNavArgs *args);
 int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species);
 void GunkDexNav_Update(FieldSystem *fieldSystem);
 

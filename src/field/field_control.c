@@ -308,12 +308,12 @@ int FieldInput_Process(FieldInput *fieldInput, FieldSystem *fieldSystem) {
         gGunkDexNav.active = FALSE;
         gGunkDexNav.chain = 0;
         StartMapSceneScript(fieldSystem, std_gunk_dexnav_got_away, NULL);
+        *(u16 *)FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_SPECIAL_VAR_8006) = gGunkDexNav.water; // "in the water"
         return 1;
     }
 
-    // Gunk: R searches again for the Pokémon last picked in the DexNav
+    // Gunk: R searches again for the Pokémon last picked in the DexNav (with none picked yet, it says to pick one)
     if ((fieldInput->newKeys & PAD_BUTTON_R) && fieldInput->unk0_8 && fieldSystem->mapLoadType == MAP_LOAD_TYPE_OVERWORLD
-        && Save_GunkSave_Get(fieldSystem->saveData)->dexNavSpecies != SPECIES_NONE
         && Bag_HasItem(Save_Bag_Get(fieldSystem->saveData), ITEM_DEXNAV, 1, HEAP_ID_FIELD1)) {
         StartMapSceneScript(fieldSystem, std_gunk_dexnav_search_again, NULL);
         return 1;

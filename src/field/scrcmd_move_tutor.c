@@ -8,7 +8,9 @@
 #include "msgdata/msg/msg_0040.h"
 
 #include "assert.h"
+#include "field_system.h"
 #include "gunk_dexnav.h"
+#include "gunk_dexnav_app.h"
 #include "gunk_save.h"
 #include "heap.h"
 #include "message_format.h"
@@ -24,6 +26,7 @@
 #include "script.h"
 #include "script_manager.h"
 #include "script_pokemon_util.h"
+#include "task.h"
 
 // Note: move tutors for Blast Burn, Hydro Cannon, Frenzy Plant
 // and Draco Meteor are handled separately in scr_seq_0948_T30R0601.s
@@ -343,48 +346,25 @@ BOOL ScrCmd_742(ScriptContext *ctx) {
     return FALSE;
 }
 
-// Gunk: the DexNav menu: the area's grass Pokémon (● caught, ○ seen, ????? unseen) in a field list menu, built like
-// MoveTutorChooseMove's. The result var gets the species, or 0xFFFE for CANCEL / B, or 0 when there is no grass here.
-BOOL sub_020478D0(ScriptContext *ctx);
-BOOL sub_02047908(struct UnkStruct_ov01_021EDC28 *menu, int idx);
-
+// Gunk: the DexNav screen (gunk_dexnav_app.c), built from the area's encounters right now. The result var gets the
+// land Pokémon chosen to search for, or 0xFFFE when the screen was closed. Run between a fade out and RestoreOverworld.
 BOOL ScrCmd_GunkDexNavMenu(ScriptContext *ctx) {
     FieldSystem *fieldSystem = ctx->fieldSystem;
-    struct UnkStruct_ov01_021EDC28 **menu = ov01_021F6B20(fieldSystem);
-    MessageFormat **messageFormat = FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_MESSAGE_FORMAT);
-    Window *window = FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_WINDOW);
-    Pokedex *pokedex = Save_Pokedex_Get(fieldSystem->saveData);
-    u16 resultVarId = ScriptReadHalfword(ctx);
-    u16 *result = GetVarPointer(fieldSystem, resultVarId);
-    u16 species[DEXNAV_MENU_MAX];
-    int count = GunkDexNav_ListSpecies(fieldSystem, species, DEXNAV_MENU_MAX);
+    GunkDexNavArgs **args = FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_RUNNING_APP_DATA);
 
-    ctx->data[0] = resultVarId;
-    if (count == 0 || fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD) {
-        *result = 0;
-        return FALSE;
-    }
-    *menu = ov01_021EDF78(fieldSystem, 1, 1, 0, 1, result, *messageFormat, window, ctx->msgdata);
-    for (int i = 0; i < count; i++) {
-        BufferSpeciesName(*messageFormat, 0, species[i]);
-        if (Pokedex_CheckMonCaughtFlag(pokedex, species[i])) {
-            MoveTutorMenu_SetListItem(*menu, msg_0040_00130, 0xff, species[i]);
-        } else if (Pokedex_CheckMonSeenFlag(pokedex, species[i])) {
-            MoveTutorMenu_SetListItem(*menu, msg_0040_00131, 0xff, species[i]);
-        } else {
-            MoveTutorMenu_SetListItem(*menu, msg_0040_00132, 0xff, species[i]);
-        }
-    }
-    MoveTutorMenu_SetListItem(*menu, msg_0040_00133, 0xff, 0xfffe);
-    // shown and waited for as ScrCmd_MenuExec does
-    ov01_021F6ABC(fieldSystem, 3, 7, result);
-    ov01_021F6B34(fieldSystem, sub_02047908, *menu);
-    SetupNativeScript(ctx, sub_020478D0);
+    ctx->data[0] = ScriptReadHalfword(ctx);
+    *args = Heap_Alloc(HEAP_ID_FIELD2, sizeof(GunkDexNavArgs));
+    MI_CpuClear8(*args, sizeof(GunkDexNavArgs));
+    (*args)->saveData = fieldSystem->saveData;
+    GunkDexNav_BuildArea(fieldSystem, *args);
+    FieldSystem_LaunchApplication(fieldSystem, &gOverlayTemplate_GunkDexNav, *args);
+    SetupNativeScript(ctx, GunkDexNavApp_ScriptWait); // in the main binary: the field overlays unload while it waits
     return TRUE;
 }
 
 // Gunk: starts a DexNav search. Result: DEXNAV_SEARCH_*. On success the message buffers hold the species (0),
-// level (1), search level (2), chain (3) and the number of perfect IVs (4), and VAR_SPECIAL_x8004 is TRUE if shiny.
+// level (1), search level (2), chain (3) and the number of perfect IVs (4), VAR_SPECIAL_x8004 is TRUE if shiny and
+// VAR_SPECIAL_x8006 TRUE if the Pokémon hides in the water.
 BOOL ScrCmd_GunkDexNavSearch(ScriptContext *ctx) {
     FieldSystem *fieldSystem = ctx->fieldSystem;
     MessageFormat **messageFormat = FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_MESSAGE_FORMAT);
@@ -402,6 +382,7 @@ BOOL ScrCmd_GunkDexNavSearch(ScriptContext *ctx) {
         BufferIntegerAsString(*messageFormat, 3, gGunkDexNav.chain, 3, PRINTING_MODE_LEFT_ALIGN, TRUE);
         BufferIntegerAsString(*messageFormat, 4, gGunkDexNav.perfectIVs, 1, PRINTING_MODE_LEFT_ALIGN, TRUE);
         *(u16 *)FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_SPECIAL_VAR_8004) = gGunkDexNav.shiny;
+        *(u16 *)FieldSysGetAttrAddr(fieldSystem, SCRIPTENV_SPECIAL_VAR_8006) = gGunkDexNav.water;
     }
     return FALSE;
 }

@@ -27,8 +27,9 @@ Done:
 - **Exp. All** (a key item from the Guide Gent): switched on, Pokémon that didn't battle get half the EXP and the
   EVs.
 
-- **DexNav** (a key item from the Guide Gent): pick one of the area's grass Pokémon, or press R for the last one,
-  and it hides in a rustling patch of grass nearby. Searching the same Pokémon raises its search level and chain,
+- **DexNav** (a key item from the Guide Gent): a touch screen of the area's Pokémon, on land and in the water
+  (caught in colour, seen in grey, unseen as "?"). Tap a Pokémon you've seen twice, or press R for the last one,
+  and it hides in a rustling patch of grass nearby, or in the water while you Surf. Searching the same Pokémon raises its search level and chain,
   which bring better IVs and more shiny chances. The Pokémon are rolled exactly as wild ones, so they stay legal.
 
 - **24 PC boxes** (18 in the original game): room for 720 Pokémon.

@@ -851,6 +851,30 @@
     {
       "id": "msg_0040_00139",
       "en_US": "The Pokémon in the grass got away…"
+    },
+    {
+      "id": "msg_0040_00140",
+      "en_US": "Choose a Pokémon on the DexNav first."
+    },
+    {
+      "id": "msg_0040_00141",
+      "en_US": ["There’s no water close enough\n", "for a Pokémon to hide in."]
+    },
+    {
+      "id": "msg_0040_00142",
+      "en_US": ["{STRVAR_1 1, 0, 0} lives in the water here.\n", "Search for it while Surfing."]
+    },
+    {
+      "id": "msg_0040_00143",
+      "en_US": ["{STRVAR_1 1, 0, 0} lives in the tall grass here.\n", "Search for it on land."]
+    },
+    {
+      "id": "msg_0040_00144",
+      "en_US": ["A {STRVAR_1 1, 0, 0} Lv. {STRVAR_1 52, 1, 0} is hiding\n", "in the rippling water!\r", "Search Lv. {STRVAR_1 52, 2, 0}  Chain {STRVAR_1 52, 3, 0}\n", "Perfect IVs: {STRVAR_1 52, 4, 0} of 6"]
+    },
+    {
+      "id": "msg_0040_00145",
+      "en_US": "The Pokémon in the water got away…"
     }
   ]
 }
