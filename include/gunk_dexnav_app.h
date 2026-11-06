@@ -38,7 +38,17 @@ typedef struct GunkDexNavArgs {
     SaveData *saveData;
     GunkDexNavEntry slots[DEXNAV_TOTAL_SLOTS];
     u16 chosen; // out: the Pokémon to search for, or SPECIES_NONE
+    // info (HG's swarms and radio, as Gunk's Platinum shows honey trees and the Poké Radar)
+    u16 swarmSpecies; // today's swarm, once a phone call has started one; SPECIES_NONE if none
+    u16 swarmMapId;
+    u8 radio;         // DEXNAV_RADIO_*: a sound show the Pokégear is playing, which changes some grass Pokémon
 } GunkDexNavArgs;
+
+enum {
+    DEXNAV_RADIO_OFF,
+    DEXNAV_RADIO_HOENN,
+    DEXNAV_RADIO_SINNOH,
+};
 
 extern const OverlayManagerTemplate gOverlayTemplate_GunkDexNav;
 

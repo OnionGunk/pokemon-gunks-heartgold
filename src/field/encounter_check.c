@@ -1588,6 +1588,14 @@ void GunkDexNav_BuildArea(FieldSystem *fieldSystem, GunkDexNavArgs *args) {
     GunkDexNavEntry *land = &args->slots[0], *water = &args->slots[DEXNAV_SECTION_SLOTS];
 
     MI_CpuClear8(args->slots, sizeof(args->slots));
+    args->swarmSpecies = SPECIES_NONE;
+    RoamerSaveData *roamerSave = Save_Roamers_Get(fieldSystem->saveData);
+    if (RoamerSave_OutbreakActive(roamerSave)) {
+        GetSwarmInfoFromRand(Roamers_GetRand(roamerSave, 2), &args->swarmMapId, &args->swarmSpecies);
+    }
+    args->radio = GetRadioMusicPlayingSeq() == RADIO_MUSIC_SEQ_HOENN_SOUNDS ? DEXNAV_RADIO_HOENN
+        : GetRadioMusicPlayingSeq() == RADIO_MUSIC_SEQ_SINNOH_SOUNDS     ? DEXNAV_RADIO_SINNOH
+                                                                          : DEXNAV_RADIO_OFF;
     if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD) {
         return; // the Safari Zone and Bug-Catching Contest have their own encounters
     }

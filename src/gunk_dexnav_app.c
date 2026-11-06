@@ -15,6 +15,9 @@
 #include "gunk_save.h"
 #include "heap.h"
 #include "main.h"
+#include "map_header.h"
+#include "map_section.h"
+#include "msgdata.h"
 #include "overlay_manager.h"
 #include "pm_string.h"
 #include "pokedex.h"
@@ -33,6 +36,7 @@
 #include "vram_transfer_manager.h"
 
 #include "gunk_dexnav_art.h"
+#include "msgdata/msg.naix"
 
 // The Certificates app never runs at the same time, so its heap is free to borrow.
 #define HEAP_ID_DEXNAV HEAP_ID_CERTIFICATES
@@ -166,6 +170,22 @@ static void PrintAscii(GunkDexNavApp *app, Window *window, const char *text, int
     AppendAscii(string, text);
     PrintString(window, string, x, y, color);
     String_Delete(string);
+}
+
+// right-aligned against the info card's inner edge
+#define INFO_RIGHT 236
+
+static void PrintRight(Window *window, String *string, int y) {
+    PrintString(window, string, INFO_RIGHT - FontID_String_GetWidth(FONT_SYSTEM, string, 0), y, TEXT_DARK);
+}
+
+// a map's location name, as the Town Map shows it
+static void AppendLocationName(GunkDexNavApp *app, String *dst, u16 mapId) {
+    static const u16 banks[] = { msg_0279, msg_0281, msg_0280 }; // as BufferLocationName
+    u32 mapsec = MapHeader_GetMapSec(mapId);
+    String *name = ReadMsgData_NewNarc_NewString(NARC_msgdata_msg, banks[sub_02017FAC(mapsec)], sub_02017FCC(mapsec), app->heapID);
+    String_Cat(dst, name);
+    String_Delete(name);
 }
 
 static void SlotPosition(int slot, int *x, int *y) {
@@ -498,6 +518,26 @@ static void GunkDexNavApp_DrawDetails(GunkDexNavApp *app) {
         AppendAscii(string, "Search Lv. ");
         AppendNumber(app, string, gunkSave->dexNavSearchLevel[entry->species]);
         PrintString(window, string, 20, 108, TEXT_DARK);
+    }
+
+    // info: a radio sound show playing (it brings other Pokémon to the grass) and today's swarm
+    if (app->args->radio != DEXNAV_RADIO_OFF) {
+        PrintAscii(app, window, app->args->radio == DEXNAV_RADIO_HOENN ? "Hoenn Sound" : "Sinnoh Sound", 76, 3, TEXT_ON_BAR);
+    }
+    if (app->args->swarmSpecies != SPECIES_NONE) {
+        String_SetEmpty(string);
+        AppendAscii(string, "Swarm: ");
+        if (Pokedex_CheckMonSeenFlag(app->pokedex, app->args->swarmSpecies)) {
+            String *name = GetSpeciesName(app->args->swarmSpecies, app->heapID);
+            String_Cat(string, name);
+            String_Delete(name);
+        } else {
+            AppendAscii(string, "?????");
+        }
+        PrintRight(window, string, 108 - 20);
+        String_SetEmpty(string);
+        AppendLocationName(app, string, app->args->swarmMapId);
+        PrintRight(window, string, 108);
     }
 
     // search card: what R looks for, and the chain on it here

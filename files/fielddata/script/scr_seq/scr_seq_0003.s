@@ -1902,21 +1902,9 @@ _GunkDexNavResult:
 	GoToIfEq _GunkDexNavSurfOnly
 	Compare VAR_SPECIAL_x8005, 6
 	GoToIfEq _GunkDexNavGrassOnly
+	// found: no message (no pause, as in Gunk's Platinum); the search bar shows the Pokémon
 	PlaySE SEQ_SE_DP_SELECT
-	Compare VAR_SPECIAL_x8006, 0
-	GoToIfNe _GunkDexNavFoundInWater
-	NPCMsg msg_0040_00137
-	GoTo _GunkDexNavFound
-
-_GunkDexNavFoundInWater:
-	NPCMsg msg_0040_00144
-_GunkDexNavFound:
-	WaitABPress
-	Compare VAR_SPECIAL_x8004, 0
-	GoToIfEq _GunkDexNavEnd
-	NPCMsg msg_0040_00138
-	WaitABPress
-	GoTo _GunkDexNavEnd
+	GoTo _GunkDexNavClosed
 
 _GunkDexNavNotHere:
 	NPCMsg msg_0040_00135

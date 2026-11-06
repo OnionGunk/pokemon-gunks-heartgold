@@ -29,7 +29,9 @@ Done:
 
 - **DexNav** (a key item from the Guide Gent): a touch screen of the area's Pokémon, on land and in the water
   (caught in colour, seen in grey, unseen as "?"). Tap a Pokémon you've seen twice, or press R for the last one,
-  and it hides in a rustling patch of grass nearby, or in the water while you Surf. Searching the same Pokémon raises its search level and chain,
+  and it hides in a rustling patch of grass nearby, or in the water while you Surf. A search bar shows its level,
+  nature, ability, chain and perfect IVs (and a star if it's shiny). The screen also shows today's swarm and the
+  radio show playing. Searching the same Pokémon raises its search level and chain,
   which bring better IVs and more shiny chances. The Pokémon are rolled exactly as wild ones, so they stay legal.
 
 - **24 PC boxes** (18 in the original game): room for 720 Pokémon.

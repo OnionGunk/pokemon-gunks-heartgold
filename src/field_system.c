@@ -10,6 +10,7 @@
 
 #include "field_warp_tasks.h"
 #include "gunk_dexnav.h"
+#include "gunk_dexnav_bar.h"
 #include "main.h"
 #include "map_events.h"
 #include "math_util.h"
@@ -214,6 +215,7 @@ void FieldSystem_Control(FieldSystem *fieldSystem) {
     if (gGunkDexNav.active && fieldSystem->runningFieldMap && fieldSystem->mapLoadType == MAP_LOAD_TYPE_OVERWORLD) {
         GunkDexNav_Update(fieldSystem);
     }
+    GunkDexNavBar_Update(fieldSystem); // Gunk: the search bar
 
     if (movementAllowed) {
         PlayerAvatar_UpdateMovement(fieldSystem->playerAvatar);

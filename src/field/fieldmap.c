@@ -35,6 +35,7 @@
 #include "field_warp_tasks.h"
 #include "gf_3d_render.h"
 #include "gf_gfx_planes.h"
+#include "gunk_dexnav_bar.h"
 #include "map_events.h"
 #include "map_header.h"
 #include "map_matrix.h"
@@ -259,6 +260,8 @@ BOOL FieldMap_Exit(OverlayManager *man, int *state) {
     switch (*state) {
     case 0:
         FS_LoadOverlay(MI_PROCESSOR_ARM9, FS_OVERLAY_ID(ds_protect));
+
+        GunkDexNavBar_OnFieldExit(fieldSystem); // Gunk: the search bar is in the field's heap
 
         Gymmick_Free(fieldSystem);
 
