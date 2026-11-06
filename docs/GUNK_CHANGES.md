@@ -179,6 +179,7 @@ earlier builds load.
 | milestones.py will koga bruno karen: each member from their room's entrance, the walk-in scene, the battle | all four beaten the same as vanilla (every var and flag), saved, power-cycled and continued in the room. The test Mewtwo uses Shadow Ball against Karen (Psychic can't touch her Dark types) |
 | follower_check.py: Route 29 with Kadabra in the lead | it follows one tile behind; talking to it plays its reaction and hands the field back; a DexNav search, the bar and the patch's battle leave it out; Surfing on Cherrygrove's sea, it's in its ball. (Harness fix: test saves moved by `teleport_save` now move the follower with the player, as a real save has it) |
 | menus_check.py: party and summary pages, the Bag with every pocket sorted, Trainer Card, Options, DexNav | each opens and closes back to walking on the same tile; field memory back where it started. The Pokégear and Pokédex aren't in this early state |
+| Reruns on this build: dexnav_rules, dexnav_water, dexnav_legality, `suite.py saves` | all pass, including new_game (the release ROM booted from power-on, a new game saved and continued) and hall_of_fame. The 10 new legality dumps: PKHeX 10/10 valid, Method K 10/10 (both plain wild catches came through Kadabra's Synchronize; methodk.py now checks that branch too) |
 
 ## Plan for the remaining ports
 
