@@ -1861,7 +1861,9 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
     if (species == SPECIES_NONE) {
         return DEXNAV_SEARCH_NONE_CHOSEN;
     }
-    if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD || Save_VarsFlags_CheckBugContestFlag(Save_VarsFlags_Get(fieldSystem->saveData))) {
+    // the Bug Contest and the Safari Zone make their own battles (contest and Safari Balls): no searches there
+    SaveVarsFlags *varsFlags = Save_VarsFlags_Get(fieldSystem->saveData);
+    if (fieldSystem->mapLoadType != MAP_LOAD_TYPE_OVERWORLD || Save_VarsFlags_CheckBugContestFlag(varsFlags) || Save_VarsFlags_CheckSafariSysFlag(varsFlags)) {
         return DEXNAV_SEARCH_NOT_HERE;
     }
     if (!DexNav_AreaHas(fieldSystem, water, species)) {

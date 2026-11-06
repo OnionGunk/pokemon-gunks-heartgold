@@ -180,6 +180,7 @@ earlier builds load.
 | follower_check.py: Route 29 with Kadabra in the lead | it follows one tile behind; talking to it plays its reaction and hands the field back; a DexNav search, the bar and the patch's battle leave it out; Surfing on Cherrygrove's sea, it's in its ball. (Harness fix: test saves moved by `teleport_save` now move the follower with the player, as a real save has it) |
 | menus_check.py: party and summary pages, the Bag with every pocket sorted, Trainer Card, Options, DexNav | each opens and closes back to walking on the same tile; field memory back where it started. The Pokégear and Pokédex aren't in this early state |
 | Reruns on this build: dexnav_rules, dexnav_water, dexnav_legality, `suite.py saves` | all pass, including new_game (the release ROM booted from power-on, a new game saved and continued) and hall_of_fame. The 10 new legality dumps: PKHeX 10/10 valid, Method K 10/10 (both plain wild catches came through Kadabra's Synchronize; methodk.py now checks that branch too) |
+| dexnav_refusals.py: the DexNav and other field effects (checked after Gunk's Black found a clash there) | the patch's tile is chosen by its metatile alone, so no field effect already out can block it, and its rustle is vanilla's one-shot grass effect, so it can't break others (HG has no Poké Radar). Gap fixed: the Safari Zone makes its own battles (Safari Balls), so searches are now refused there as in the Bug Contest; with the Safari flag set R starts none, without it the search starts |
 
 ## Plan for the remaining ports
 
