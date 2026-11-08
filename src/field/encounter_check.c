@@ -5,6 +5,7 @@
 #include "constants/abilities.h"
 #include "constants/field/map_load.h"
 #include "constants/maps.h"
+#include "constants/metatile_behavior.h"
 #include "constants/weather.h"
 
 #include "battle/battle_setup.h"
@@ -1464,8 +1465,9 @@ static void FieldSystem_UpdateTurnFrameCounter(FieldSystem *fieldSystem) {
 #define DEXNAV_LC_ADD          24691
 #define DEXNAV_LC_MUL_INV      0xEEB9EB65 // 1103515245 * this == 1 (mod 2^32)
 
-// the grass effect a Pokémon walking into tall grass makes (field overlay)
+// the grass effects a Pokémon walking into tall grass, or very tall grass, makes (field overlay)
 void ov01_021FF0E4(LocalMapObject *mapObject, int a1, int x, int z, int a4);
+void ov01_021FF964(LocalMapObject *mapObject, int a1, int x, int z, int a4);
 
 typedef struct DexNavFrame {
     u32 personality;
@@ -1845,8 +1847,20 @@ static BOOL DexNav_RollHiddenMon(FieldSystem *fieldSystem, u32 otId) {
     return TRUE;
 }
 
+// A tile where walking (or surfing) meets wild Pok�mon, as the encounter check decides it: tall and very tall grass,
+// and cave and building floors (FieldSystem_GetTileEncounterTypeAndRate)
+// TILE_BEHAVIOR_NONE: GetMetatileBehavior's answer off the loaded map, past the end of the flags table
+static BOOL DexNav_IsPatchTile(u8 behavior, BOOL water) {
+    return behavior != TILE_BEHAVIOR_NONE && MetatileBehavior_CanGenerateWalkingEncounters(behavior) && MetatileBehavior_IsSurfableWater(behavior) == water;
+}
+
 static void DexNav_Rustle(FieldSystem *fieldSystem) {
-    ov01_021FF0E4(PlayerAvatar_GetMapObject(fieldSystem->playerAvatar), 0, gGunkDexNav.x, gGunkDexNav.z, 0);
+    LocalMapObject *player = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+    if (MetatileBehavior_IsVeryTallGrass(GetMetatileBehavior(fieldSystem, gGunkDexNav.x, gGunkDexNav.z))) {
+        ov01_021FF964(player, 0, gGunkDexNav.x, gGunkDexNav.z, 0);
+    } else {
+        ov01_021FF0E4(player, 0, gGunkDexNav.x, gGunkDexNav.z, 0);
+    }
 }
 
 int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
@@ -1881,7 +1895,7 @@ int GunkDexNav_TryStart(FieldSystem *fieldSystem, u16 species) {
             continue;
         }
         u8 behavior = GetMetatileBehavior(fieldSystem, playerX + dx, playerZ + dz);
-        if (water ? !MetatileBehavior_IsSurfableWater(behavior) : !MetatileBehavior_IsTallGrass(behavior)) {
+        if (!DexNav_IsPatchTile(behavior, water)) {
             continue;
         }
         s->species = species;

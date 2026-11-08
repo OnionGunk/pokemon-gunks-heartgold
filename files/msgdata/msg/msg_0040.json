@@ -830,15 +830,15 @@
     },
     {
       "id": "msg_0040_00134",
-      "en_US": "The DexNav shows no Pokémon in the grass here."
+      "en_US": "The DexNav shows no Pokémon on land here."
     },
     {
       "id": "msg_0040_00135",
-      "en_US": ["{STRVAR_1 1, 0, 0} isn’t in the grass here\n", "at this time of day."]
+      "en_US": ["{STRVAR_1 1, 0, 0} isn’t on land here\n", "at this time of day."]
     },
     {
       "id": "msg_0040_00136",
-      "en_US": ["There’s no tall grass close enough\n", "for a Pokémon to hide in."]
+      "en_US": ["There’s no grass or cave floor close\n", "enough for a Pokémon to hide in."]
     },
     {
       "id": "msg_0040_00137",
@@ -850,7 +850,7 @@
     },
     {
       "id": "msg_0040_00139",
-      "en_US": "The Pokémon in the grass got away…"
+      "en_US": "The hidden Pokémon got away…"
     },
     {
       "id": "msg_0040_00140",
@@ -866,7 +866,7 @@
     },
     {
       "id": "msg_0040_00143",
-      "en_US": ["{STRVAR_1 1, 0, 0} lives in the tall grass here.\n", "Search for it on land."]
+      "en_US": ["{STRVAR_1 1, 0, 0} lives on land here.\n", "Search for it on land."]
     },
     {
       "id": "msg_0040_00144",
